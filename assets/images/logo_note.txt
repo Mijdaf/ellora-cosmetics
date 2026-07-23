@@ -1,0 +1,2 @@
+Place your logo file here as "logo.png" (the wheat + نفس logo you uploaded).
+The app references it at: assets/images/logo.png
