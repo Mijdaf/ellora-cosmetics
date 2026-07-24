@@ -4,10 +4,15 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 
-/// Three soft RadialGradient blobs that drift along slow Lissajous-style
-/// paths and gently "breathe" (scale in and out) as they go — reads like a
-/// slow aurora behind the page rather than a fixed spot light. Cheap: just
-/// three circles re-placed/re-scaled each tick, no blur filters.
+/// Blurred, drifting gold/espresso orbs plus a scatter of twinkling
+/// particles — the same painting technique as the splash screen's aurora
+/// (`AnimatedBackdrop`/`_BackdropPainter`): a `CustomPainter` drawing
+/// `RadialGradient`-shaded circles through a Gaussian `MaskFilter` blur,
+/// instead of plain un-blurred `Container` blobs. Kept as its own painter
+/// (rather than reusing `AnimatedBackdrop` directly) because the home page
+/// needs it to span the *whole scrollable content height* — not just one
+/// fixed viewport — and to sit on top of the page's own mood gradient
+/// instead of painting an opaque backdrop color of its own.
 class AuroraGlow extends StatefulWidget {
   final bool isDark;
   const AuroraGlow({super.key, required this.isDark});
@@ -19,6 +24,7 @@ class AuroraGlow extends StatefulWidget {
 class _AuroraGlowState extends State<AuroraGlow> with SingleTickerProviderStateMixin {
   late final AnimationController _controller =
       AnimationController(vsync: this, duration: const Duration(seconds: 30))..repeat();
+  final List<_AuroraParticle> _particles = List.generate(22, (i) => _AuroraParticle.random(i));
 
   @override
   void dispose() {
@@ -29,62 +35,155 @@ class _AuroraGlowState extends State<AuroraGlow> with SingleTickerProviderStateM
   @override
   Widget build(BuildContext context) {
     final gold = AppColors.wheatGold;
+    final goldLight = AppColors.wheatGoldLight;
     final espresso = widget.isDark ? AppColors.wheatGoldLight : AppColors.espresso;
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final width = constraints.maxWidth;
         final height = constraints.maxHeight.isFinite ? constraints.maxHeight : 2400.0;
-
         return AnimatedBuilder(
           animation: _controller,
           builder: (context, _) {
-            final t = _controller.value * 2 * math.pi;
-            return Stack(
-              children: [
-                _blob(
-                  cx: width * 0.22 + math.sin(t * 0.8) * width * 0.16,
-                  cy: height * 0.14 + math.cos(t * 1.3) * height * 0.05,
-                  size: width.clamp(360.0, 620.0) * (0.85 + math.sin(t) * 0.12),
-                  color: gold,
-                  opacity: widget.isDark ? 0.11 : 0.15,
-                ),
-                _blob(
-                  cx: width * 0.8 + math.cos(t * 0.6) * width * 0.14,
-                  cy: height * 0.42 + math.sin(t * 1.1) * height * 0.07,
-                  size: width.clamp(300.0, 560.0) * (0.9 + math.cos(t * 1.4) * 0.14),
-                  color: espresso,
-                  opacity: widget.isDark ? 0.13 : 0.08,
-                ),
-                _blob(
-                  cx: width * 0.35 + math.sin(t * 1.2) * width * 0.20,
-                  cy: height * 0.78 + math.cos(t * 0.7) * height * 0.06,
-                  size: width.clamp(320.0, 580.0) * (0.8 + math.sin(t * 0.9) * 0.16),
-                  color: gold,
-                  opacity: widget.isDark ? 0.08 : 0.12,
-                ),
-              ],
+            return CustomPaint(
+              size: Size(constraints.maxWidth, height),
+              painter: _AuroraPainter(
+                t: _controller.value,
+                isDark: widget.isDark,
+                gold: gold,
+                goldLight: goldLight,
+                espresso: espresso,
+                particles: _particles,
+              ),
             );
           },
         );
       },
     );
   }
+}
 
-  Widget _blob({required double cx, required double cy, required double size, required Color color, required double opacity}) {
-    return Positioned(
-      left: cx - size / 2,
-      top: cy - size / 2,
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: RadialGradient(
-            colors: [color.withOpacity(opacity), color.withOpacity(0)],
-          ),
-        ),
+class _AuroraPainter extends CustomPainter {
+  final double t; // 0..1 looping
+  final bool isDark;
+  final Color gold;
+  final Color goldLight;
+  final Color espresso;
+  final List<_AuroraParticle> particles;
+
+  _AuroraPainter({
+    required this.t,
+    required this.isDark,
+    required this.gold,
+    required this.goldLight,
+    required this.espresso,
+    required this.particles,
+  });
+
+  void _orb(Canvas canvas, Offset center, double radius, Color color, double opacity) {
+    final paint = Paint()
+      ..shader = RadialGradient(
+        colors: [color.withOpacity(opacity), color.withOpacity(0)],
+      ).createShader(Rect.fromCircle(center: center, radius: radius))
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 60);
+    canvas.drawCircle(center, radius, paint);
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final width = size.width;
+    final height = size.height;
+    final angle = t * 2 * math.pi;
+
+    _orb(
+      canvas,
+      Offset(
+        width * 0.22 + math.sin(angle * 0.8) * width * 0.16,
+        height * 0.14 + math.cos(angle * 1.3) * height * 0.05,
       ),
+      width.clamp(360.0, 620.0) * (0.85 + math.sin(angle) * 0.12) / 2,
+      gold,
+      isDark ? 0.28 : 0.30,
+    );
+
+    _orb(
+      canvas,
+      Offset(
+        width * 0.8 + math.cos(angle * 0.6) * width * 0.14,
+        height * 0.42 + math.sin(angle * 1.1) * height * 0.07,
+      ),
+      width.clamp(300.0, 560.0) * (0.9 + math.cos(angle * 1.4) * 0.14) / 2,
+      espresso,
+      isDark ? 0.28 : 0.20,
+    );
+
+    _orb(
+      canvas,
+      Offset(
+        width * 0.35 + math.sin(angle * 1.2) * width * 0.20,
+        height * 0.78 + math.cos(angle * 0.7) * height * 0.06,
+      ),
+      width.clamp(320.0, 580.0) * (0.8 + math.sin(angle * 0.9) * 0.16) / 2,
+      goldLight,
+      isDark ? 0.22 : 0.26,
+    );
+
+    // Fourth orb — deep, slow pulse — same fourth-layer treatment the
+    // splash screen's aurora has, absent from the old flat 3-blob version.
+    final pulse = 0.85 + math.sin(angle * 1.6) * 0.15;
+    _orb(
+      canvas,
+      Offset(
+        width * 0.58 + math.cos(angle * 0.4 + 1.3) * width * 0.12,
+        height * 0.60 + math.sin(angle * 0.55 + 0.7) * height * 0.08,
+      ),
+      width.clamp(320.0, 620.0) * 0.42 * pulse,
+      gold,
+      isDark ? 0.20 : 0.20,
+    );
+
+    // Twinkling particle scatter, spread across the full page height —
+    // same twinkle formula as the splash screen's aurora, brightened to
+    // match its more vivid look.
+    for (final p in particles) {
+      final dx = (p.xBase + math.sin(angle * p.speed + p.seed) * 0.04) % 1.0 * width;
+      final dy = ((p.yBase - t * p.speed * 0.05 + p.seed) % 1.0) * height;
+      final twinkle = 0.5 + 0.5 * math.sin(angle * (1.5 + p.speed) + p.seed * 3);
+      final paint = Paint()
+        ..color = (p.bright ? goldLight : gold).withOpacity((isDark ? 0.30 : 0.34) + 0.34 * twinkle);
+      canvas.drawCircle(Offset(dx, dy), p.radius * (0.8 + 0.4 * twinkle), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _AuroraPainter oldDelegate) => true;
+}
+
+class _AuroraParticle {
+  final double seed;
+  final double radius;
+  final double speed;
+  final double xBase;
+  final double yBase;
+  final bool bright;
+
+  _AuroraParticle({
+    required this.seed,
+    required this.radius,
+    required this.speed,
+    required this.xBase,
+    required this.yBase,
+    required this.bright,
+  });
+
+  factory _AuroraParticle.random(int i) {
+    final rnd = math.Random(i * 977);
+    return _AuroraParticle(
+      seed: rnd.nextDouble() * math.pi * 2,
+      radius: 1.3 + rnd.nextDouble() * 2.4,
+      speed: 0.4 + rnd.nextDouble() * 0.8,
+      xBase: rnd.nextDouble(),
+      yBase: rnd.nextDouble(),
+      bright: rnd.nextBool(),
     );
   }
 }

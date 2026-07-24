@@ -53,6 +53,123 @@ class _HeroSectionState extends State<HeroSection> with TickerProviderStateMixin
     // in the menu section.
     final visitUsColor = AppColors.wheatGold;
 
+    // Built once, then arranged differently depending on layout: side by
+    // side (text left, logo right) on wide screens, or stacked — logo
+    // first, then the wordmark/subtitle/buttons column — on narrow ones,
+    // so the phone view leads with the mark before the copy.
+    final textColumn = Expanded(
+      flex: isNarrow ? 0 : 6,
+      child: AnimatedBuilder(
+        animation: _entrance,
+        builder: (context, child) {
+          final t = Curves.easeOutCubic.transform(_entrance.value);
+          return Opacity(
+            opacity: t,
+            child: Transform.translate(offset: Offset(0, (1 - t) * 30), child: child),
+          );
+        },
+        child: Column(
+          crossAxisAlignment: isNarrow ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _LetterReveal(
+              text: 'Nafas',
+              style: AppTheme.brandWordmark(isArabic: isArabic).copyWith(fontSize: isNarrow ? 60 : 76, color: wordmarkColor),
+              controller: _entrance,
+              startInterval: 0.0,
+              endInterval: 0.55,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              S.t('hero_eyebrow', isArabic),
+              style: AppTheme.eyebrow(isArabic: isArabic).copyWith(color: isDark ? AppColors.wheatGold : AppColors.wheatGoldDark),
+            ),
+            const SizedBox(height: 26),
+            Text(
+              S.t('hero_headline', isArabic),
+              textAlign: isNarrow ? TextAlign.center : TextAlign.start,
+              style: Theme.of(context)
+                  .textTheme
+                  .displayLarge
+                  ?.copyWith(fontSize: isNarrow ? 34 : 50, color: headlineColor),
+            ),
+            const SizedBox(height: 18),
+            ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: isNarrow ? 500 : 480),
+              child: Text(
+                S.t('hero_body', isArabic),
+                textAlign: isNarrow ? TextAlign.center : TextAlign.start,
+                style: TextStyle(
+                  color: bodyColor,
+                  fontSize: 16,
+                  height: 1.6,
+                  fontFamily: Theme.of(context).textTheme.bodyLarge?.fontFamily,
+                ),
+              ),
+            ),
+            const SizedBox(height: 34),
+            Wrap(
+              alignment: isNarrow ? WrapAlignment.center : WrapAlignment.start,
+              spacing: 16,
+              runSpacing: 12,
+              children: [
+                AnimatedBuilder(
+                  animation: _pulse,
+                  builder: (context, child) {
+                    final glow = 0.25 + _pulse.value * 0.35;
+                    return Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(30),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.wheatGold.withOpacity(glow),
+                            blurRadius: 22,
+                            spreadRadius: 1,
+                          ),
+                        ],
+                      ),
+                      child: child,
+                    );
+                  },
+                  child: ElevatedButton(
+                    onPressed: widget.onExplore,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(S.t('explore_menu', isArabic)),
+                        const SizedBox(width: 8),
+                        const Icon(Icons.arrow_forward, size: 18),
+                      ],
+                    ),
+                  ),
+                ),
+                OutlinedButton(
+                  onPressed: () {},
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: visitUsColor,
+                    side: BorderSide(color: visitUsColor.withOpacity(0.5)),
+                    padding: const EdgeInsets.symmetric(horizontal: 28),
+                    minimumSize: const Size(0, 54),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(27)),
+                    textStyle: TextStyle(fontFamily: AppTheme.fontFor(isArabic), fontWeight: FontWeight.w600, fontSize: 15),
+                  ),
+                  child: Text(S.t('visit_us', isArabic)),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+
+    final logo = Expanded(
+      flex: isNarrow ? 0 : 5,
+      child: Padding(
+        padding: EdgeInsets.only(top: isNarrow ? 0 : 0, bottom: isNarrow ? 30 : 0),
+        child: const Center(child: WheatLogo3D(size: 220)),
+      ),
+    );
+
     return Padding(
       padding: EdgeInsets.fromLTRB(
         isNarrow ? 24 : 80,
@@ -63,120 +180,11 @@ class _HeroSectionState extends State<HeroSection> with TickerProviderStateMixin
       child: Flex(
         direction: isNarrow ? Axis.vertical : Axis.horizontal,
         crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            flex: isNarrow ? 0 : 6,
-            child: AnimatedBuilder(
-              animation: _entrance,
-              builder: (context, child) {
-                final t = Curves.easeOutCubic.transform(_entrance.value);
-                return Opacity(
-                  opacity: t,
-                  child: Transform.translate(offset: Offset(0, (1 - t) * 30), child: child),
-                );
-              },
-              child: Column(
-                crossAxisAlignment: isNarrow ? CrossAxisAlignment.center : CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _LetterReveal(
-                    text: 'Nafas',
-                    style: AppTheme.brandWordmark(isArabic: isArabic).copyWith(fontSize: isNarrow ? 60 : 76, color: wordmarkColor),
-                    controller: _entrance,
-                    startInterval: 0.0,
-                    endInterval: 0.55,
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    S.t('hero_eyebrow', isArabic),
-                    style: AppTheme.eyebrow(isArabic: isArabic).copyWith(color: isDark ? AppColors.wheatGold : AppColors.wheatGoldDark),
-                  ),
-                  const SizedBox(height: 26),
-                  Text(
-                    S.t('hero_headline', isArabic),
-                    textAlign: isNarrow ? TextAlign.center : TextAlign.start,
-                    style: Theme.of(context)
-                        .textTheme
-                        .displayLarge
-                        ?.copyWith(fontSize: isNarrow ? 34 : 50, color: headlineColor),
-                  ),
-                  const SizedBox(height: 18),
-                  ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: isNarrow ? 500 : 480),
-                    child: Text(
-                      S.t('hero_body', isArabic),
-                      textAlign: isNarrow ? TextAlign.center : TextAlign.start,
-                      style: TextStyle(
-                        color: bodyColor,
-                        fontSize: 16,
-                        height: 1.6,
-                        fontFamily: Theme.of(context).textTheme.bodyLarge?.fontFamily,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 34),
-                  Wrap(
-                    alignment: isNarrow ? WrapAlignment.center : WrapAlignment.start,
-                    spacing: 16,
-                    runSpacing: 12,
-                    children: [
-                      AnimatedBuilder(
-                        animation: _pulse,
-                        builder: (context, child) {
-                          final glow = 0.25 + _pulse.value * 0.35;
-                          return Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(30),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.wheatGold.withOpacity(glow),
-                                  blurRadius: 22,
-                                  spreadRadius: 1,
-                                ),
-                              ],
-                            ),
-                            child: child,
-                          );
-                        },
-                        child: ElevatedButton(
-                          onPressed: widget.onExplore,
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(S.t('explore_menu', isArabic)),
-                              const SizedBox(width: 8),
-                              const Icon(Icons.arrow_forward, size: 18),
-                            ],
-                          ),
-                        ),
-                      ),
-                      OutlinedButton(
-                        onPressed: () {},
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: visitUsColor,
-                          side: BorderSide(color: visitUsColor.withOpacity(0.5)),
-                          padding: const EdgeInsets.symmetric(horizontal: 28),
-                          minimumSize: const Size(0, 54),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(27)),
-                          textStyle: TextStyle(fontFamily: AppTheme.fontFor(isArabic), fontWeight: FontWeight.w600, fontSize: 15),
-                        ),
-                        child: Text(S.t('visit_us', isArabic)),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-          if (!isNarrow) const SizedBox(width: 40),
-          Expanded(
-            flex: isNarrow ? 0 : 5,
-            child: Padding(
-              padding: EdgeInsets.only(top: isNarrow ? 50 : 0),
-              child: const Center(child: WheatLogo3D(size: 220)),
-            ),
-          ),
-        ],
+        // Logo first on a phone (stacked layout), text first on wider
+        // screens (side-by-side layout, text on the leading side).
+        children: isNarrow
+            ? [logo, textColumn]
+            : [textColumn, const SizedBox(width: 40), logo],
       ),
     );
   }
