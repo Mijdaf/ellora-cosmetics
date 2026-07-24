@@ -14,6 +14,7 @@ import '../theme/app_theme.dart';
 class NafasDrawer extends StatelessWidget {
   final int cartCount;
   final int activeNavIndex; // -1 = none, matches ['Menu', 'About'] order
+  final bool isDark;
   final List<VoidCallback>? onNavLinkTap; // matches ['Menu', 'About']
   final VoidCallback? onViewCart;
   final VoidCallback? onBrowseMenu;
@@ -22,6 +23,7 @@ class NafasDrawer extends StatelessWidget {
     super.key,
     this.cartCount = 0,
     this.activeNavIndex = -1,
+    this.isDark = true,
     this.onNavLinkTap,
     this.onViewCart,
     this.onBrowseMenu,
@@ -42,9 +44,18 @@ class NafasDrawer extends StatelessWidget {
     final labels = [S.t('nav_menu', isArabic), S.t('nav_about', isArabic)];
     const icons = [Icons.restaurant_menu, Icons.favorite_border];
     const iconsActive = [Icons.restaurant_menu, Icons.favorite];
+    // Mirrors the nav bar's own light/dark handling: espresso brown in
+    // dark mood, a clean cream/white surface with dark espresso text and
+    // icons in light mood — instead of always being hardcoded to the dark
+    // espresso look regardless of the site's mood toggle.
+    final bg = isDark ? AppColors.espressoDeep : AppColors.cream;
+    final onBg = isDark ? AppColors.cream : AppColors.espressoDeep;
+    final dividerColor = isDark
+        ? AppColors.wheatGold.withOpacity(0.15)
+        : AppColors.wheatGold.withOpacity(0.3);
 
     return Drawer(
-      backgroundColor: AppColors.espressoDeep,
+      backgroundColor: bg,
       width: 288,
       child: SafeArea(
         child: Column(
@@ -71,17 +82,18 @@ class NafasDrawer extends StatelessWidget {
                   const SizedBox(width: 10),
                   Text(
                     'Nafas',
-                    style: AppTheme.brandWordmark(isArabic: isArabic).copyWith(fontSize: 21, fontWeight: FontWeight.w700),
+                    style: AppTheme.brandWordmark(isArabic: isArabic).copyWith(fontSize: 21, fontWeight: FontWeight.w700, color: onBg),
                   ),
                   const Spacer(),
                   _DrawerIconButton(
                     icon: Icons.close_rounded,
+                    color: onBg,
                     onTap: () => Navigator.of(context).maybePop(),
                   ),
                 ],
               ),
             ),
-            Divider(color: AppColors.wheatGold.withOpacity(0.15), height: 1, thickness: 1),
+            Divider(color: dividerColor, height: 1, thickness: 1),
             const SizedBox(height: 10),
             // Nav links.
             ...List.generate(labels.length, (i) {
@@ -91,6 +103,7 @@ class NafasDrawer extends StatelessWidget {
                 icon: isActive ? iconsActive[i] : icons[i],
                 isActive: isActive,
                 isArabic: isArabic,
+                onBg: onBg,
                 onTap: () {
                   Navigator.of(context).maybePop();
                   if (onNavLinkTap != null && i < onNavLinkTap!.length) onNavLinkTap![i]();
@@ -98,7 +111,7 @@ class NafasDrawer extends StatelessWidget {
               );
             }),
             const Spacer(),
-            Divider(color: AppColors.wheatGold.withOpacity(0.15), height: 1, thickness: 1),
+            Divider(color: dividerColor, height: 1, thickness: 1),
             const SizedBox(height: 6),
             // Cart shortcut — same "browse vs view" logic as the nav bar's
             // cart dropdown, just as a single tappable row here.
@@ -109,6 +122,7 @@ class NafasDrawer extends StatelessWidget {
               icon: Icons.shopping_bag_outlined,
               isActive: false,
               isArabic: isArabic,
+              onBg: onBg,
               onTap: () {
                 Navigator.of(context).maybePop();
                 cartCount == 0 ? onBrowseMenu?.call() : onViewCart?.call();
@@ -119,9 +133,9 @@ class NafasDrawer extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 4, 20, 18),
               child: Row(
-                children: const [
-                  _DrawerMoodToggle(),
-                  SizedBox(width: 10),
+                children: [
+                  const _DrawerMoodToggle(),
+                  const SizedBox(width: 10),
                   _DrawerLanguageToggle(),
                 ],
               ),
@@ -142,6 +156,7 @@ class _DrawerLinkTile extends StatelessWidget {
   final IconData icon;
   final bool isActive;
   final bool isArabic;
+  final Color onBg;
   final VoidCallback onTap;
 
   const _DrawerLinkTile({
@@ -149,6 +164,7 @@ class _DrawerLinkTile extends StatelessWidget {
     required this.icon,
     required this.isActive,
     required this.isArabic,
+    required this.onBg,
     required this.onTap,
   });
 
@@ -169,7 +185,7 @@ class _DrawerLinkTile extends StatelessWidget {
                 Icon(
                   icon,
                   size: 20,
-                  color: isActive ? AppColors.wheatGoldLight : AppColors.cream.withOpacity(0.75),
+                  color: isActive ? AppColors.wheatGoldLight : onBg.withOpacity(0.75),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -177,7 +193,7 @@ class _DrawerLinkTile extends StatelessWidget {
                     label,
                     style: TextStyle(
                       fontFamily: AppTheme.fontFor(isArabic),
-                      color: isActive ? AppColors.wheatGoldLight : AppColors.cream.withOpacity(0.92),
+                      color: isActive ? AppColors.wheatGoldLight : onBg.withOpacity(0.92),
                       fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
                       fontSize: 15.5,
                     ),
@@ -202,8 +218,9 @@ class _DrawerLinkTile extends StatelessWidget {
 /// styling, used for the drawer's own close button.
 class _DrawerIconButton extends StatelessWidget {
   final IconData icon;
+  final Color color;
   final VoidCallback onTap;
-  const _DrawerIconButton({required this.icon, required this.onTap});
+  const _DrawerIconButton({required this.icon, required this.color, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -216,7 +233,7 @@ class _DrawerIconButton extends StatelessWidget {
         child: InkWell(
           customBorder: const CircleBorder(),
           onTap: onTap,
-          child: Center(child: Icon(icon, color: AppColors.cream, size: 20)),
+          child: Center(child: Icon(icon, color: color, size: 20)),
         ),
       ),
     );

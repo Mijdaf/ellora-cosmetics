@@ -595,7 +595,7 @@ class _DrawerMenuButtonState extends State<_DrawerMenuButton> with SingleTickerP
                 Transform(
                   alignment: Alignment.center,
                   transform: Matrix4.identity()
-                    ..translate(0.0, v * 6.5)
+                    ..translate(0.0, -6.5 * (1 - v))
                     ..rotateZ(v * math.pi / 4),
                   child: _bar(),
                 ),
@@ -606,7 +606,7 @@ class _DrawerMenuButtonState extends State<_DrawerMenuButton> with SingleTickerP
                 Transform(
                   alignment: Alignment.center,
                   transform: Matrix4.identity()
-                    ..translate(0.0, -v * 6.5)
+                    ..translate(0.0, 6.5 * (1 - v))
                     ..rotateZ(-v * math.pi / 4),
                   child: _bar(),
                 ),

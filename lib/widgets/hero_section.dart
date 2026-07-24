@@ -46,12 +46,6 @@ class _HeroSectionState extends State<HeroSection> with TickerProviderStateMixin
     final headlineColor = isDark ? AppColors.cream : AppColors.espressoDeep;
     final wordmarkColor = isDark ? AppColors.cream : AppColors.espressoDeep;
     final bodyColor = isDark ? AppColors.cream.withOpacity(0.85) : AppColors.espressoDark.withOpacity(0.85);
-    // Gold, not cream/espresso — this matches the outlined "Pastries /
-    // Cakes / Bread / Coffee" filter pills further down the page, so the
-    // secondary-button language stays the same everywhere instead of
-    // switching between a white outline in the hero and a gold outline
-    // in the menu section.
-    final visitUsColor = AppColors.wheatGold;
 
     // Built once, then arranged differently depending on layout: side by
     // side (text left, logo right) on wide screens, or stacked — logo
@@ -123,7 +117,7 @@ class _HeroSectionState extends State<HeroSection> with TickerProviderStateMixin
                         boxShadow: [
                           BoxShadow(
                             color: AppColors.wheatGold.withOpacity(glow),
-                            blurRadius: 22,
+                            blurRadius: isNarrow ? 16 : 22,
                             spreadRadius: 1,
                           ),
                         ],
@@ -133,27 +127,26 @@ class _HeroSectionState extends State<HeroSection> with TickerProviderStateMixin
                   },
                   child: ElevatedButton(
                     onPressed: widget.onExplore,
+                    style: isNarrow
+                        ? ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.wheatGold,
+                            foregroundColor: AppColors.espressoDeep,
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            minimumSize: const Size(0, 44),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+                            textStyle: TextStyle(fontFamily: AppTheme.fontFor(isArabic), fontWeight: FontWeight.w600, fontSize: 13),
+                            elevation: 0,
+                          )
+                        : null,
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(S.t('explore_menu', isArabic)),
-                        const SizedBox(width: 8),
-                        const Icon(Icons.arrow_forward, size: 18),
+                        SizedBox(width: isNarrow ? 6 : 8),
+                        Icon(Icons.arrow_forward, size: isNarrow ? 15 : 18),
                       ],
                     ),
                   ),
-                ),
-                OutlinedButton(
-                  onPressed: () {},
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: visitUsColor,
-                    side: BorderSide(color: visitUsColor.withOpacity(0.5)),
-                    padding: const EdgeInsets.symmetric(horizontal: 28),
-                    minimumSize: const Size(0, 54),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(27)),
-                    textStyle: TextStyle(fontFamily: AppTheme.fontFor(isArabic), fontWeight: FontWeight.w600, fontSize: 15),
-                  ),
-                  child: Text(S.t('visit_us', isArabic)),
                 ),
               ],
             ),
@@ -175,7 +168,7 @@ class _HeroSectionState extends State<HeroSection> with TickerProviderStateMixin
         isNarrow ? 24 : 80,
         isNarrow ? 110 : 140,
         isNarrow ? 24 : 80,
-        isNarrow ? 60 : 100,
+        isNarrow ? 0 : 100,
       ),
       child: Flex(
         direction: isNarrow ? Axis.vertical : Axis.horizontal,

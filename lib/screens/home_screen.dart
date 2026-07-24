@@ -229,6 +229,7 @@ class _HomeScreenState extends State<HomeScreen> {
           drawer: NafasDrawer(
             cartCount: _cartCount,
             activeNavIndex: _activeNavIndex,
+            isDark: isDark,
             onNavLinkTap: [_scrollToMenu, _scrollToAbout],
             onBrowseMenu: _scrollToMenu,
             onViewCart: _openCart,
@@ -241,6 +242,33 @@ class _HomeScreenState extends State<HomeScreen> {
             controller: _scrollController,
             child: Stack(
               children: [
+                // Ambient decorative layers (floating pastry tokens + the
+                // aurora glow) must be painted FIRST here so Stack renders
+                // them behind the real content below — Stack paints later
+                // children on top, and these were previously listed after
+                // the content Column, which put translucent color washes
+                // over every bit of text on the page. Barely noticeable in
+                // dark mode (busy espresso backdrop already), but glaring
+                // in light mode where the marquee's cream-on-cream strip
+                // has almost no contrast margin to spare.
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: RepaintBoundary(
+                      child: PageFloatingTokens(isNarrow: isNarrow),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: 1200,
+                  child: IgnorePointer(
+                    child: RepaintBoundary(
+                      child: AuroraGlow(isDark: isDark),
+                    ),
+                  ),
+                ),
                 // The 3-stop gradient used to be painted behind the *whole*
                 // page (hero through footer) in one Container. Since that
                 // stretched the same 3 color stops across the entire, very
@@ -400,20 +428,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ],
                   ),
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: RepaintBoundary(
-                      child: PageFloatingTokens(isNarrow: isNarrow),
-                    ),
-                  ),
-                ),
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: RepaintBoundary(
-                      child: AuroraGlow(isDark: isDark),
-                    ),
-                  ),
-                ),
               ],
             ),
           ),
@@ -459,7 +473,7 @@ class _PromoBannersState extends State<_PromoBanners> {
         final bannerHeight = (availableWidth / bannerAspectRatio).clamp(200.0, 560.0);
 
         return Padding(
-          padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 20),
+          padding: EdgeInsets.fromLTRB(horizontalPadding, isMobile ? 0 : 20, horizontalPadding, 20),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(isMobile ? 0 : 24),
             child: Column(
@@ -1055,40 +1069,76 @@ class _FooterState extends State<_Footer> with TickerProviderStateMixin {
                           child: Column(
                             crossAxisAlignment: isNarrow ? CrossAxisAlignment.center : CrossAxisAlignment.start,
                             children: [
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  AnimatedBuilder(
-                                    animation: _breathe,
-                                    builder: (context, child) {
-                                      final s = 1 + _breathe.value * 0.05;
-                                      return Transform.scale(scale: s, child: child);
-                                    },
-                                    child: Container(
-                                      width: 48,
-                                      height: 48,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        border: Border.all(color: AppColors.wheatGold.withOpacity(0.5), width: 1.4),
-                                        boxShadow: [
-                                          BoxShadow(color: AppColors.wheatGold.withOpacity(0.18), blurRadius: 16),
-                                        ],
-                                      ),
-                                      padding: const EdgeInsets.all(2),
-                                      child: ClipOval(
-                                        child: Image.asset(
-                                          'assets/images/logo.jpg',
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (_, __, ___) =>
-                                              const Icon(Icons.eco, color: AppColors.wheatGold, size: 26),
+                              isNarrow
+                                  ? Column(
+                                      children: [
+                                        Center(
+                                          child: AnimatedBuilder(
+                                            animation: _breathe,
+                                            builder: (context, child) {
+                                              final s = 1 + _breathe.value * 0.05;
+                                              return Transform.scale(scale: s, child: child);
+                                            },
+                                            child: Container(
+                                              width: 48,
+                                              height: 48,
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                border: Border.all(color: AppColors.wheatGold.withOpacity(0.5), width: 1.4),
+                                                boxShadow: [
+                                                  BoxShadow(color: AppColors.wheatGold.withOpacity(0.18), blurRadius: 16),
+                                                ],
+                                              ),
+                                              padding: const EdgeInsets.all(2),
+                                              child: ClipOval(
+                                                child: Image.asset(
+                                                  'assets/images/logo.jpg',
+                                                  fit: BoxFit.cover,
+                                                  errorBuilder: (_, __, ___) =>
+                                                      const Icon(Icons.eco, color: AppColors.wheatGold, size: 26),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
                                         ),
-                                      ),
+                                        const SizedBox(height: 12),
+                                        Text('Nafas', style: AppTheme.brandWordmark(isArabic: isArabic).copyWith(fontSize: 28, color: isDark ? AppColors.cream : AppColors.espressoDeep)),
+                                      ],
+                                    )
+                                  : Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        AnimatedBuilder(
+                                          animation: _breathe,
+                                          builder: (context, child) {
+                                            final s = 1 + _breathe.value * 0.05;
+                                            return Transform.scale(scale: s, child: child);
+                                          },
+                                          child: Container(
+                                            width: 48,
+                                            height: 48,
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              border: Border.all(color: AppColors.wheatGold.withOpacity(0.5), width: 1.4),
+                                              boxShadow: [
+                                                BoxShadow(color: AppColors.wheatGold.withOpacity(0.18), blurRadius: 16),
+                                              ],
+                                            ),
+                                            padding: const EdgeInsets.all(2),
+                                            child: ClipOval(
+                                              child: Image.asset(
+                                                'assets/images/logo.jpg',
+                                                fit: BoxFit.cover,
+                                                errorBuilder: (_, __, ___) =>
+                                                    const Icon(Icons.eco, color: AppColors.wheatGold, size: 26),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 14),
+                                        Text('Nafas', style: AppTheme.brandWordmark(isArabic: isArabic).copyWith(fontSize: 28, color: isDark ? AppColors.cream : AppColors.espressoDeep)),
+                                      ],
                                     ),
-                                  ),
-                                  const SizedBox(width: 14),
-                                  Text('Nafas', style: AppTheme.brandWordmark(isArabic: isArabic).copyWith(fontSize: 28)),
-                                ],
-                              ),
                               const SizedBox(height: 10),
                               Text(S.t('baked_with_love', isArabic), style: AppTheme.eyebrow(isArabic: isArabic)),
                               const SizedBox(height: 14),

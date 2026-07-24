@@ -34,7 +34,15 @@ class NafasApp extends StatelessWidget {
         title: 'Nafas Bakery',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.themeFor(isArabic),
-        initialRoute: '/',
+        // Read the URL the browser was actually pointed at instead of
+        // always hardcoding '/' here. With a hardcoded '/', opening
+        // yoursite.com/#/admin still booted the splash screen every time —
+        // and the splash's own fixed-duration timer then unconditionally
+        // pushes HomeScreen next, silently swapping the dashboard out for
+        // the public storefront a few seconds later. That's what looked
+        // like "the dashboard kicks me back to the site" — it wasn't a
+        // redirect on top of /admin, it was /admin never actually loading.
+        initialRoute: WidgetsBinding.instance.platformDispatcher.defaultRouteName,
         // The admin dashboard has no link in the storefront's nav bar on
         // purpose — shoppers shouldn't stumble into it. It's reached
         // directly by URL instead: on Flutter web that's yoursite.com/#/admin

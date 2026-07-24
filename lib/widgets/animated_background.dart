@@ -24,7 +24,7 @@ class AuroraGlow extends StatefulWidget {
 class _AuroraGlowState extends State<AuroraGlow> with SingleTickerProviderStateMixin {
   late final AnimationController _controller =
       AnimationController(vsync: this, duration: const Duration(seconds: 30))..repeat();
-  final List<_AuroraParticle> _particles = List.generate(22, (i) => _AuroraParticle.random(i));
+  final List<_AuroraParticle> _particles = List.generate(14, (i) => _AuroraParticle.random(i));
 
   @override
   void dispose() {
@@ -84,7 +84,7 @@ class _AuroraPainter extends CustomPainter {
       ..shader = RadialGradient(
         colors: [color.withOpacity(opacity), color.withOpacity(0)],
       ).createShader(Rect.fromCircle(center: center, radius: radius))
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 60);
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 40);
     canvas.drawCircle(center, radius, paint);
   }
 
