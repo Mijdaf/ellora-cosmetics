@@ -24,7 +24,7 @@ class AuroraGlow extends StatefulWidget {
 class _AuroraGlowState extends State<AuroraGlow> with SingleTickerProviderStateMixin {
   late final AnimationController _controller =
       AnimationController(vsync: this, duration: const Duration(seconds: 30))..repeat();
-  final List<_AuroraParticle> _particles = List.generate(14, (i) => _AuroraParticle.random(i));
+  final List<_AuroraParticle> _particles = List.generate(8, (i) => _AuroraParticle.random(i));
 
   @override
   void dispose() {
@@ -84,7 +84,7 @@ class _AuroraPainter extends CustomPainter {
       ..shader = RadialGradient(
         colors: [color.withOpacity(opacity), color.withOpacity(0)],
       ).createShader(Rect.fromCircle(center: center, radius: radius))
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 40);
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 28);
     canvas.drawCircle(center, radius, paint);
   }
 
@@ -100,9 +100,9 @@ class _AuroraPainter extends CustomPainter {
         width * 0.22 + math.sin(angle * 0.8) * width * 0.16,
         height * 0.14 + math.cos(angle * 1.3) * height * 0.05,
       ),
-      width.clamp(360.0, 620.0) * (0.85 + math.sin(angle) * 0.12) / 2,
+      width.clamp(280.0, 480.0) * (0.85 + math.sin(angle) * 0.12) / 2,
       gold,
-      isDark ? 0.28 : 0.30,
+      isDark ? 0.16 : 0.18,
     );
 
     _orb(
@@ -111,9 +111,9 @@ class _AuroraPainter extends CustomPainter {
         width * 0.8 + math.cos(angle * 0.6) * width * 0.14,
         height * 0.42 + math.sin(angle * 1.1) * height * 0.07,
       ),
-      width.clamp(300.0, 560.0) * (0.9 + math.cos(angle * 1.4) * 0.14) / 2,
+      width.clamp(240.0, 440.0) * (0.9 + math.cos(angle * 1.4) * 0.14) / 2,
       espresso,
-      isDark ? 0.28 : 0.20,
+      isDark ? 0.16 : 0.12,
     );
 
     _orb(
@@ -122,9 +122,9 @@ class _AuroraPainter extends CustomPainter {
         width * 0.35 + math.sin(angle * 1.2) * width * 0.20,
         height * 0.78 + math.cos(angle * 0.7) * height * 0.06,
       ),
-      width.clamp(320.0, 580.0) * (0.8 + math.sin(angle * 0.9) * 0.16) / 2,
+      width.clamp(260.0, 460.0) * (0.8 + math.sin(angle * 0.9) * 0.16) / 2,
       goldLight,
-      isDark ? 0.22 : 0.26,
+      isDark ? 0.13 : 0.15,
     );
 
     // Fourth orb — deep, slow pulse — same fourth-layer treatment the
@@ -136,9 +136,9 @@ class _AuroraPainter extends CustomPainter {
         width * 0.58 + math.cos(angle * 0.4 + 1.3) * width * 0.12,
         height * 0.60 + math.sin(angle * 0.55 + 0.7) * height * 0.08,
       ),
-      width.clamp(320.0, 620.0) * 0.42 * pulse,
+      width.clamp(260.0, 480.0) * 0.36 * pulse,
       gold,
-      isDark ? 0.20 : 0.20,
+      isDark ? 0.12 : 0.12,
     );
 
     // Twinkling particle scatter, spread across the full page height —
@@ -149,7 +149,7 @@ class _AuroraPainter extends CustomPainter {
       final dy = ((p.yBase - t * p.speed * 0.05 + p.seed) % 1.0) * height;
       final twinkle = 0.5 + 0.5 * math.sin(angle * (1.5 + p.speed) + p.seed * 3);
       final paint = Paint()
-        ..color = (p.bright ? goldLight : gold).withOpacity((isDark ? 0.30 : 0.34) + 0.34 * twinkle);
+        ..color = (p.bright ? goldLight : gold).withOpacity((isDark ? 0.20 : 0.22) + 0.22 * twinkle);
       canvas.drawCircle(Offset(dx, dy), p.radius * (0.8 + 0.4 * twinkle), paint);
     }
   }

@@ -56,57 +56,68 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: AnimatedBackdrop(
-        child: Center(
-          child: FadeTransition(
-            opacity: _fade,
-            child: ScaleTransition(
-              scale: _scale,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 220,
-                    height: 220,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: RadialGradient(
-                        colors: [AppColors.espresso, AppColors.espressoDeep],
-                      ),
-                      border: Border.all(color: AppColors.wheatGold.withOpacity(0.55), width: 2),
-                      boxShadow: [
-                        BoxShadow(color: AppColors.wheatGold.withOpacity(0.4), blurRadius: 70, spreadRadius: 6),
-                      ],
-                    ),
-                    child: ClipOval(
-                      child: Image.asset(
-                        'assets/images/logo.jpg',
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(
-                          color: AppColors.espressoDeep,
-                          alignment: Alignment.center,
-                          child: const Icon(Icons.eco, color: AppColors.wheatGold, size: 80),
+    return ValueListenableBuilder<bool>(
+      valueListenable: AppMood.isDark,
+      builder: (context, isDark, _) {
+        // Same background tone the home screen uses, so there's no visual
+        // "flash" or mismatch when the splash hands off to the storefront.
+        final bgColor = isDark ? AppColors.espressoDark : AppColors.surfaceCream;
+        final taglineColor = isDark ? AppColors.wheatGold : AppColors.wheatGoldDark;
+
+        return Scaffold(
+          body: AnimatedBackdrop(
+            baseColor: bgColor,
+            child: Center(
+              child: FadeTransition(
+                opacity: _fade,
+                child: ScaleTransition(
+                  scale: _scale,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 220,
+                        height: 220,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: RadialGradient(
+                            colors: [AppColors.espresso, AppColors.espressoDeep],
+                          ),
+                          border: Border.all(color: AppColors.wheatGold.withOpacity(0.55), width: 2),
+                          boxShadow: [
+                            BoxShadow(color: AppColors.wheatGold.withOpacity(0.4), blurRadius: 70, spreadRadius: 6),
+                          ],
+                        ),
+                        child: ClipOval(
+                          child: Image.asset(
+                            'assets/images/logo.jpg',
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                              color: AppColors.espressoDeep,
+                              alignment: Alignment.center,
+                              child: const Icon(Icons.eco, color: AppColors.wheatGold, size: 80),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+                      const SizedBox(height: 28),
+                      // Tagline under the logo, echoing the wordmark's own
+                      // caption so the brand name reads even before the
+                      // storefront loads.
+                      Text(
+                        'مخبوز بحب',
+                        style: AppTheme.eyebrow(isArabic: true).copyWith(fontSize: 14, color: taglineColor),
+                      ),
+                      const SizedBox(height: 36),
+                      _LoadingDots(controller: _dotsController),
+                    ],
                   ),
-                  const SizedBox(height: 28),
-                  // Tagline under the logo, echoing the wordmark's own
-                  // caption so the brand name reads even before the
-                  // storefront loads.
-                  Text(
-                    'مخبوز بحب',
-                    style: AppTheme.eyebrow(isArabic: true).copyWith(fontSize: 14),
-                  ),
-                  const SizedBox(height: 36),
-                  _LoadingDots(controller: _dotsController),
-                ],
+                ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

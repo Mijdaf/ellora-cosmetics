@@ -10,8 +10,9 @@ import '../theme/app_theme.dart';
 class AnimatedBackdrop extends StatefulWidget {
   final Widget? child;
   final double intensity;
+  final Color baseColor;
 
-  const AnimatedBackdrop({super.key, this.child, this.intensity = 1.0});
+  const AnimatedBackdrop({super.key, this.child, this.intensity = 1.0, this.baseColor = AppColors.espressoDeep});
 
   @override
   State<AnimatedBackdrop> createState() => _AnimatedBackdropState();
@@ -43,7 +44,7 @@ class _AnimatedBackdropState extends State<AnimatedBackdrop> with SingleTickerPr
       child: Stack(
         fit: StackFit.expand,
         children: [
-          const ColoredBox(color: AppColors.espressoDeep),
+          ColoredBox(color: widget.baseColor),
           AnimatedBuilder(
             animation: _controller,
             builder: (context, _) {

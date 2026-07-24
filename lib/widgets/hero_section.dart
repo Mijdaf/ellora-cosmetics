@@ -168,7 +168,7 @@ class _HeroSectionState extends State<HeroSection> with TickerProviderStateMixin
         isNarrow ? 24 : 80,
         isNarrow ? 110 : 140,
         isNarrow ? 24 : 80,
-        isNarrow ? 0 : 100,
+        isNarrow ? 40 : 100,
       ),
       child: Flex(
         direction: isNarrow ? Axis.vertical : Axis.horizontal,
