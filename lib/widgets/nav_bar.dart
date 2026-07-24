@@ -130,6 +130,13 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
                           onBrowseMenu: onCartBrowseMenu,
                           onViewCart: onViewCart,
                           isArabic: isArabic,
+                          // Same RTL mirroring as the mobile bar: this is the
+                          // last item in the Row, so under Arabic it lands on
+                          // the capsule's left edge instead of the right —
+                          // flip the hang direction so the panel still opens
+                          // toward the middle of the screen instead of off
+                          // its edge.
+                          alignLeft: isArabic,
                         ),
                       ],
                     ),
@@ -199,7 +206,16 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
                         onBrowseMenu: onCartBrowseMenu,
                         onViewCart: onViewCart,
                         isArabic: isArabic,
-                        alignLeft: true,
+                        // `alignLeft` isn't about language, it's about which
+                        // physical screen edge the icon ends up next to. The
+                        // mobile bar's Row mirrors under RTL (this widget is
+                        // first in the list, so in Arabic it lands on the
+                        // right edge instead of the left), so the dropdown's
+                        // hang direction has to flip with it — otherwise in
+                        // Arabic the panel still anchors as if the icon were
+                        // on the left and hangs further right, straight off
+                        // the edge of the screen.
+                        alignLeft: !isArabic,
                       ),
                       const SizedBox(width: 10),
                       Text(
