@@ -11,6 +11,7 @@ import '../theme/app_theme.dart';
 import '../widgets/animated_background.dart';
 import '../widgets/hero_section.dart';
 import '../widgets/home_banner_slideshow.dart';
+import '../widgets/nafas_drawer.dart';
 import '../widgets/nav_bar.dart';
 import '../widgets/product_card_3d.dart';
 import '../widgets/scroll_reveal.dart';
@@ -36,6 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // -1 = neither section in view (e.g. still on the hero); 0 = Menu, 1 =
   // About — drives the nav bar's real "active" link, not just hover.
   int _activeNavIndex = -1;
+  bool _isDrawerOpen = false;
 
   int get _cartCount => _cartItems.fold(0, (sum, item) => sum + item.quantity);
 
@@ -216,31 +218,56 @@ class _HomeScreenState extends State<HomeScreen> {
             cartItems: _cartItems,
             scrollProgress: _scrollProgress,
             activeNavIndex: _activeNavIndex,
+            isDrawerOpen: _isDrawerOpen,
             onNavLinkTap: [_scrollToMenu, _scrollToAbout],
             onCartBrowseMenu: _scrollToMenu,
             onViewCart: _openCart,
           ),
+          // Phone navigation drawer — the hamburger in NavBar opens this
+          // (Scaffold.of(context).openDrawer()) instead of a small
+          // dropdown once the screen is narrow.
+          drawer: NafasDrawer(
+            cartCount: _cartCount,
+            activeNavIndex: _activeNavIndex,
+            onNavLinkTap: [_scrollToMenu, _scrollToAbout],
+            onBrowseMenu: _scrollToMenu,
+            onViewCart: _openCart,
+          ),
+          // Fires on every close path (swipe, tap-outside, back button, or
+          // a link tap inside the drawer that calls Navigator.pop), so the
+          // hamburger icon's morph-to-X state always stays accurate.
+          onDrawerChanged: (isOpen) => setState(() => _isDrawerOpen = isOpen),
           body: SingleChildScrollView(
             controller: _scrollController,
             child: Stack(
               children: [
-                // One continuous gradient behind every section, so the whole
-                // home page reads as a single backdrop instead of separate
-                // colored blocks per section. Swaps between the espresso
-                // "dark mood" gradient and a soft cream "light mood" one.
-                Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: isDark ? AppColors.heroGradient : AppColors.lightPageGradient,
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
+                // The 3-stop gradient used to be painted behind the *whole*
+                // page (hero through footer) in one Container. Since that
+                // stretched the same 3 color stops across the entire, very
+                // tall scroll height, the darkest stop (espressoDeep) sat
+                // almost flat for the whole first screen or two — the hero
+                // read noticeably darker than everything below it, which
+                // only reached the lighter stops much further down.
+                // Bounding the gradient to just the hero's own (intrinsic)
+                // height instead means the dark→light transition resolves
+                // by the time the hero ends, landing on the same flat tone
+                // (AppColors.espressoDark / surfaceCream) as the Scaffold's
+                // own backgroundColor everywhere below — one consistent
+                // tone top to bottom instead of a long dark dip up top.
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: isDark ? AppColors.heroGradient : AppColors.lightPageGradient,
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                        ),
+                      ),
+                      child: HeroSection(onExplore: _scrollToMenu, isDark: isDark, isArabic: isArabic),
                     ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      HeroSection(onExplore: _scrollToMenu, isDark: isDark, isArabic: isArabic),
-                      const _PromoBanners(),
+                    const _PromoBanners(),
                       _CategoryMarquee(
                         categories: categories,
                         isDark: isDark,
@@ -373,7 +400,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ],
                   ),
-                ),
                 Positioned.fill(
                   child: IgnorePointer(
                     child: RepaintBoundary(

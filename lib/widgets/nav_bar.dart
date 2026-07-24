@@ -1,5 +1,4 @@
 import 'dart:math' as math;
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../models/product.dart';
 import '../services/app_language.dart';
@@ -26,6 +25,7 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
   final List<CartItem> cartItems;
   final double scrollProgress; // 0 = top of page, 1 = scrolled down
   final int activeNavIndex; // -1 = none, matches ['Menu', 'About'] order
+  final bool isDrawerOpen; // drives the mobile hamburger's morph-to-X state
   final VoidCallback? onMenuTap;
   final List<VoidCallback>? onNavLinkTap; // matches ['Menu', 'About']
   final VoidCallback? onCartBrowseMenu;
@@ -37,6 +37,7 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
     this.cartItems = const [],
     this.scrollProgress = 0,
     this.activeNavIndex = -1,
+    this.isDrawerOpen = false,
     this.onMenuTap,
     this.onNavLinkTap,
     this.onCartBrowseMenu,
@@ -61,8 +62,10 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   Widget _buildBar(BuildContext context, bool isNarrow, double t, bool isArabic) {
+    if (isNarrow) return _buildMobileBar(context, t, isArabic);
+
     return Padding(
-      padding: EdgeInsets.fromLTRB(isNarrow ? 12 : 24, 14, isNarrow ? 12 : 24, 0),
+      padding: const EdgeInsets.fromLTRB(24, 14, 24, 0),
       child: SafeArea(
         bottom: false,
         child: Center(
@@ -87,60 +90,157 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(34),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-                  child: Container(
-                    // Was 0.55 → 0.94. On Flutter web, BackdropFilter blur
-                    // doesn't render on every renderer/browser combo, so at
-                    // low opacity the pill let hero text show straight
-                    // through it once scrolled — reading as a broken
-                    // overlap instead of a floating glass bar. Raising the
-                    // floor to 0.88 keeps the pill legible on its own even
-                    // when the blur happens to no-op.
-                    color: Color.lerp(
-                      AppColors.espressoDeep.withOpacity(0.88),
-                      AppColors.espressoDeep.withOpacity(0.97),
-                      t,
-                    ),
-                    padding: EdgeInsets.symmetric(horizontal: isNarrow ? 14 : 20),
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.center,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          const _OrbitingLogoBadge(),
-                          const SizedBox(width: 10),
-                          Text('Nafas', style: AppTheme.brandWordmark(isArabic: isArabic).copyWith(fontSize: 22, fontWeight: FontWeight.w700)),
-                          if (!isNarrow) ...[
-                            const SizedBox(width: 14),
-                            _MagneticNavLinks(onTap: onNavLinkTap, isArabic: isArabic, activeIndex: activeNavIndex),
-                          ],
-                          const SizedBox(width: 12),
-                          if (isNarrow) ...[
-                            _MorphingMenuButton(onTap: onMenuTap, onNavLinkTap: onNavLinkTap, isArabic: isArabic),
-                            const SizedBox(width: 10),
-                          ],
-                          const _MoodToggleButton(),
-                          const SizedBox(width: 8),
-                          const _LanguageToggleButton(),
-                          const SizedBox(width: 8),
-                          _CartButton(
-                            count: cartCount,
-                            items: cartItems,
-                            onBrowseMenu: onCartBrowseMenu,
-                            onViewCart: onViewCart,
-                            isArabic: isArabic,
-                          ),
-                        ],
-                      ),
+                child: Container(
+                  // Was 0.55 → 0.94 → 0.88/0.97. This pill used to sit
+                  // behind a BackdropFilter blur, but that blur re-samples
+                  // and re-blurs everything scrolling underneath it on
+                  // every single frame — and since this pill is pinned on
+                  // screen for the whole page, that cost was paid
+                  // continuously while scrolling (a classic Flutter jank
+                  // source). At this opacity the blur was already a near
+                  // no-op visually (see the old comment this replaced), so
+                  // dropping it keeps the pill just as legible while
+                  // removing that per-frame cost entirely.
+                  color: Color.lerp(
+                    AppColors.espressoDeep.withOpacity(0.88),
+                    AppColors.espressoDeep.withOpacity(0.97),
+                    t,
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.center,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const _OrbitingLogoBadge(),
+                        const SizedBox(width: 10),
+                        Text('Nafas', style: AppTheme.brandWordmark(isArabic: isArabic).copyWith(fontSize: 22, fontWeight: FontWeight.w700)),
+                        const SizedBox(width: 14),
+                        _MagneticNavLinks(onTap: onNavLinkTap, isArabic: isArabic, activeIndex: activeNavIndex),
+                        const SizedBox(width: 12),
+                        const _MoodToggleButton(),
+                        const SizedBox(width: 8),
+                        const _LanguageToggleButton(),
+                        const SizedBox(width: 8),
+                        _CartButton(
+                          count: cartCount,
+                          items: cartItems,
+                          onBrowseMenu: onCartBrowseMenu,
+                          onViewCart: onViewCart,
+                          isArabic: isArabic,
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  /// Phone layout: a single full-width glass pill spanning almost the
+  /// whole screen — bag icon, wordmark and a small round avatar clustered
+  /// on the leading side, hamburger sitting alone on the trailing side.
+  /// Mood/language toggles move into [NafasDrawer]'s footer on phones, so
+  /// this bar stays exactly four elements, matching a plain storefront
+  /// header instead of the desktop capsule's full icon row.
+  Widget _buildMobileBar(BuildContext context, double t, bool isArabic) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 0),
+      child: SafeArea(
+        bottom: false,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOut,
+          height: 60,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(
+              color: AppColors.wheatGold.withOpacity(0.14 + 0.1 * t),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.18 + 0.12 * t),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(30),
+            child: Container(
+              // No BackdropFilter here on purpose — this pill is pinned on
+              // screen for the whole page, so a live blur behind it has to
+              // re-sample everything scrolling underneath, every frame,
+              // for as long as the page is being scrolled. The backing
+              // color below is already 88-97% opaque, so a blur adds very
+              // little visually while costing a lot on scroll.
+              color: Color.lerp(
+                AppColors.espressoDeep.withOpacity(0.88),
+                AppColors.espressoDeep.withOpacity(0.97),
+                t,
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  _CartButton(
+                    count: cartCount,
+                    items: cartItems,
+                    onBrowseMenu: onCartBrowseMenu,
+                    onViewCart: onViewCart,
+                    isArabic: isArabic,
+                  ),
+                  const SizedBox(width: 10),
+                  Flexible(
+                    child: Text(
+                      'Nafas',
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTheme.brandWordmark(isArabic: isArabic).copyWith(fontSize: 19, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const _MobileAvatar(),
+                  const Spacer(),
+                  _DrawerMenuButton(isOpen: isDrawerOpen, onTap: onMenuTap),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Small static circular avatar for the mobile bar — the logo image in a
+/// thin gold ring, no spin (the desktop [_OrbitingLogoBadge]'s animation
+/// would be too busy at this size, next to the cart icon and hamburger).
+class _MobileAvatar extends StatelessWidget {
+  const _MobileAvatar();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 32,
+      height: 32,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: AppColors.wheatGold.withOpacity(0.6), width: 1.5),
+      ),
+      padding: const EdgeInsets.all(1.5),
+      child: ClipOval(
+        child: Image.asset(
+          'assets/images/logo.jpg',
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => const Icon(Icons.eco, color: AppColors.wheatGold, size: 16),
         ),
       ),
     );
@@ -431,22 +531,36 @@ class _DropdownPanel extends StatelessWidget {
   }
 }
 
-/// Hamburger that smoothly morphs into an X (rotation + translation of the
-/// three bars) and opens a real dropdown with the nav links — functional
-/// on narrow screens where the inline links are hidden.
-class _MorphingMenuButton extends StatefulWidget {
+/// Hamburger that opens the real phone [NafasDrawer] (via
+/// `Scaffold.of(context).openDrawer()`) instead of a floating dropdown —
+/// shown on narrow screens where the inline links are hidden. Morphs into
+/// an X while the drawer is open. [isOpen] is fed down from the Scaffold's
+/// `onDrawerChanged` callback (see `home_screen.dart`), which fires no
+/// matter how the drawer closes — tap-outside, swipe, back button, or a
+/// link tap inside it — so the icon always stays in sync, not just when
+/// this button itself is tapped.
+class _DrawerMenuButton extends StatefulWidget {
+  final bool isOpen;
   final VoidCallback? onTap;
-  final List<VoidCallback>? onNavLinkTap;
-  final bool isArabic;
-  const _MorphingMenuButton({this.onTap, this.onNavLinkTap, required this.isArabic});
+  const _DrawerMenuButton({required this.isOpen, this.onTap});
 
   @override
-  State<_MorphingMenuButton> createState() => _MorphingMenuButtonState();
+  State<_DrawerMenuButton> createState() => _DrawerMenuButtonState();
 }
 
-class _MorphingMenuButtonState extends State<_MorphingMenuButton> with SingleTickerProviderStateMixin {
+class _DrawerMenuButtonState extends State<_DrawerMenuButton> with SingleTickerProviderStateMixin {
   late final AnimationController _controller =
-      AnimationController(vsync: this, duration: const Duration(milliseconds: 280));
+      AnimationController(vsync: this, duration: const Duration(milliseconds: 250));
+
+  @override
+  void didUpdateWidget(covariant _DrawerMenuButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isOpen && !oldWidget.isOpen) {
+      _controller.forward();
+    } else if (!widget.isOpen && oldWidget.isOpen) {
+      _controller.reverse();
+    }
+  }
 
   @override
   void dispose() {
@@ -454,83 +568,51 @@ class _MorphingMenuButtonState extends State<_MorphingMenuButton> with SingleTic
     super.dispose();
   }
 
+  void _handleTap() {
+    final scaffold = Scaffold.of(context);
+    if (scaffold.isDrawerOpen) {
+      scaffold.closeDrawer();
+    } else {
+      scaffold.openDrawer();
+    }
+    widget.onTap?.call();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final labels = [
-      S.t('nav_menu', widget.isArabic),
-      S.t('nav_about', widget.isArabic),
-    ];
-    return _AnchoredDropdown(
-      iconBuilder: (context, isOpen, toggle) => _CompactIconButton(
-        size: 34,
-        onTap: () {
-          isOpen ? _controller.reverse() : _controller.forward();
-          toggle();
-          widget.onTap?.call();
-        },
-        child: SizedBox(
-          width: 20,
-          height: 15,
-          child: AnimatedBuilder(
-            animation: _controller,
-            builder: (context, _) {
-              final v = _controller.value;
-              return Stack(
-                children: [
-                  Transform(
-                    alignment: Alignment.center,
-                    transform: Matrix4.identity()
-                      ..translate(0.0, v * 6.5)
-                      ..rotateZ(v * math.pi / 4),
-                    child: _bar(),
-                  ),
-                  Align(
-                    alignment: Alignment.center,
-                    child: Opacity(opacity: 1 - v, child: _bar()),
-                  ),
-                  Transform(
-                    alignment: Alignment.center,
-                    transform: Matrix4.identity()
-                      ..translate(0.0, -v * 6.5)
-                      ..rotateZ(-v * math.pi / 4),
-                    child: _bar(),
-                  ),
-                ],
-              );
-            },
-          ),
-        ),
-      ),
-      panelBuilder: (context, close) => _DropdownPanel(
-        width: 180,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: labels
-              .asMap()
-              .entries
-              .map(
-                (entry) => Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(10),
-                    onTap: () {
-                      _controller.reverse();
-                      close();
-                      final callbacks = widget.onNavLinkTap;
-                      if (callbacks != null && entry.key < callbacks.length) callbacks[entry.key]();
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-                      child: Text(
-                        entry.value,
-                        style: TextStyle(fontFamily: AppTheme.fontFor(widget.isArabic), color: AppColors.cream, fontWeight: FontWeight.w700, fontSize: 14.5),
-                      ),
-                    ),
-                  ),
+    return _CompactIconButton(
+      size: 34,
+      onTap: _handleTap,
+      child: SizedBox(
+        width: 20,
+        height: 15,
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, _) {
+            final v = _controller.value;
+            return Stack(
+              children: [
+                Transform(
+                  alignment: Alignment.center,
+                  transform: Matrix4.identity()
+                    ..translate(0.0, v * 6.5)
+                    ..rotateZ(v * math.pi / 4),
+                  child: _bar(),
                 ),
-              )
-              .toList(),
+                Align(
+                  alignment: Alignment.center,
+                  child: Opacity(opacity: 1 - v, child: _bar()),
+                ),
+                Transform(
+                  alignment: Alignment.center,
+                  transform: Matrix4.identity()
+                    ..translate(0.0, -v * 6.5)
+                    ..rotateZ(-v * math.pi / 4),
+                  child: _bar(),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
