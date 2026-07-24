@@ -208,7 +208,7 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
                   ),
                   const SizedBox(width: 8),
                   const _MobileAvatar(),
-                  const SizedBox(width: 10),
+                  const Spacer(),
                   _DrawerMenuButton(isOpen: isDrawerOpen, onTap: onMenuTap),
                 ],
               ),
