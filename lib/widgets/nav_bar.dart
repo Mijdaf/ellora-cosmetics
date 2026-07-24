@@ -154,63 +154,64 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 0),
       child: SafeArea(
         bottom: false,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 220),
-          curve: Curves.easeOut,
-          height: 60,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(30),
-            border: Border.all(
-              color: AppColors.wheatGold.withOpacity(0.14 + 0.1 * t),
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.18 + 0.12 * t),
-                blurRadius: 24,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(30),
-            child: Container(
-              // No BackdropFilter here on purpose — this pill is pinned on
-              // screen for the whole page, so a live blur behind it has to
-              // re-sample everything scrolling underneath, every frame,
-              // for as long as the page is being scrolled. The backing
-              // color below is already 88-97% opaque, so a blur adds very
-              // little visually while costing a lot on scroll.
-              color: Color.lerp(
-                AppColors.espressoDeep.withOpacity(0.88),
-                AppColors.espressoDeep.withOpacity(0.97),
-                t,
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  _CartButton(
-                    count: cartCount,
-                    items: cartItems,
-                    onBrowseMenu: onCartBrowseMenu,
-                    onViewCart: onViewCart,
-                    isArabic: isArabic,
+        child: Center(
+          child: IntrinsicWidth(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOut,
+              height: 60,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(
+                  color: AppColors.wheatGold.withOpacity(0.14 + 0.1 * t),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.18 + 0.12 * t),
+                    blurRadius: 24,
+                    offset: const Offset(0, 8),
                   ),
-                  const SizedBox(width: 10),
-                  Flexible(
-                    child: Text(
-                      'Nafas',
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTheme.brandWordmark(isArabic: isArabic).copyWith(fontSize: 19, fontWeight: FontWeight.w700),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  const _MobileAvatar(),
-                  const Spacer(),
-                  _DrawerMenuButton(isOpen: isDrawerOpen, onTap: onMenuTap),
                 ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(30),
+                child: Container(
+                  // No BackdropFilter here on purpose — this pill is pinned on
+                  // screen for the whole page, so a live blur behind it has to
+                  // re-sample everything scrolling underneath, every frame,
+                  // for as long as the page is being scrolled. The backing
+                  // color below is already 88-97% opaque, so a blur adds very
+                  // little visually while costing a lot on scroll.
+                  color: Color.lerp(
+                    AppColors.espressoDeep.withOpacity(0.88),
+                    AppColors.espressoDeep.withOpacity(0.97),
+                    t,
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      _CartButton(
+                        count: cartCount,
+                        items: cartItems,
+                        onBrowseMenu: onCartBrowseMenu,
+                        onViewCart: onViewCart,
+                        isArabic: isArabic,
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        'Nafas',
+                        style: AppTheme.brandWordmark(isArabic: isArabic).copyWith(fontSize: 19, fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(width: 8),
+                      const _MobileAvatar(),
+                      const SizedBox(width: 10),
+                      _DrawerMenuButton(isOpen: isDrawerOpen, onTap: onMenuTap),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),

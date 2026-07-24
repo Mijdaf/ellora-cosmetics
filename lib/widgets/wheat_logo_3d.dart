@@ -52,7 +52,7 @@ class _WheatLogo3DState extends State<WheatLogo3D> with SingleTickerProviderStat
           final rotY = autoSwing + (_pointer.dx * 0.35);
           final rotX = _pointer.dy * -0.22;
           final floatY = math.sin(_controller.value * 2 * math.pi) * 8;
-          final glow = 0.35 + math.sin(_controller.value * 2 * math.pi) * 0.15;
+          final glow = 0.14 + math.sin(_controller.value * 2 * math.pi) * 0.06;
 
           return Transform.translate(
             offset: Offset(0, floatY),
@@ -63,8 +63,8 @@ class _WheatLogo3DState extends State<WheatLogo3D> with SingleTickerProviderStat
                 boxShadow: [
                   BoxShadow(
                     color: AppColors.wheatGold.withOpacity(glow),
-                    blurRadius: 60,
-                    spreadRadius: 6,
+                    blurRadius: 32,
+                    spreadRadius: 1,
                   ),
                 ],
               ),
