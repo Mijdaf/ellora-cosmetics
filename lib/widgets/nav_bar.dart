@@ -199,6 +199,7 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
                         onBrowseMenu: onCartBrowseMenu,
                         onViewCart: onViewCart,
                         isArabic: isArabic,
+                        alignLeft: true,
                       ),
                       const SizedBox(width: 10),
                       Text(
@@ -457,7 +458,12 @@ class _CompactIconButton extends StatelessWidget {
 class _AnchoredDropdown extends StatefulWidget {
   final Widget Function(BuildContext context, VoidCallback close) panelBuilder;
   final Widget Function(BuildContext context, bool isOpen, VoidCallback toggle) iconBuilder;
-  const _AnchoredDropdown({required this.panelBuilder, required this.iconBuilder});
+  // When true, the panel hangs to the right of the icon (aligned to its
+  // left edge) instead of the default hanging-left-from-the-right-edge —
+  // needed when the icon sits near the screen's left edge (mobile bar),
+  // where the default anchoring would push the panel off-screen.
+  final bool alignLeft;
+  const _AnchoredDropdown({required this.panelBuilder, required this.iconBuilder, this.alignLeft = false});
 
   @override
   State<_AnchoredDropdown> createState() => _AnchoredDropdownState();
@@ -490,8 +496,8 @@ class _AnchoredDropdownState extends State<_AnchoredDropdown> {
               CompositedTransformFollower(
                 link: _link,
                 showWhenUnlinked: false,
-                targetAnchor: Alignment.bottomRight,
-                followerAnchor: Alignment.topRight,
+                targetAnchor: widget.alignLeft ? Alignment.bottomLeft : Alignment.bottomRight,
+                followerAnchor: widget.alignLeft ? Alignment.topLeft : Alignment.topRight,
                 offset: const Offset(0, 10),
                 child: widget.panelBuilder(context, _close),
               ),
@@ -512,11 +518,15 @@ class _DropdownPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    // Leave a 20px margin on the narrow side so the panel never runs off
+    // the edge of small phone screens, whichever way it's anchored.
+    final safeWidth = width.clamp(0, screenWidth - 20).toDouble();
     return Material(
       color: Colors.transparent,
       child: Container(
-        width: width,
-        constraints: const BoxConstraints(maxWidth: 280),
+        width: safeWidth,
+        constraints: BoxConstraints(maxWidth: math.min(280, screenWidth - 20)),
         decoration: BoxDecoration(
           color: AppColors.espressoDeep.withOpacity(0.98),
           borderRadius: BorderRadius.circular(18),
@@ -721,12 +731,14 @@ class _CartButton extends StatefulWidget {
   final VoidCallback? onBrowseMenu;
   final VoidCallback? onViewCart;
   final bool isArabic;
+  final bool alignLeft;
   const _CartButton({
     required this.count,
     this.items = const [],
     this.onBrowseMenu,
     this.onViewCart,
     required this.isArabic,
+    this.alignLeft = false,
   });
 
   @override
@@ -764,6 +776,7 @@ class _CartButtonState extends State<_CartButton> with SingleTickerProviderState
     final subtotal = widget.items.fold<double>(0, (sum, item) => sum + item.total);
 
     return _AnchoredDropdown(
+      alignLeft: widget.alignLeft,
       iconBuilder: (context, isOpen, toggle) => SizedBox(
         key: CartIconAnchor.key,
         width: 34,
