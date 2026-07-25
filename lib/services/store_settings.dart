@@ -42,7 +42,7 @@ class StoreSettingsStore {
 
   /// Fixed id for the single settings row (created once via the SQL
   /// snippet in the Settings tab's setup note).
-  static const String _rowId = 1;
+  static const int _rowId = 1;
 
   static final ValueNotifier<StoreSettings> settings = ValueNotifier<StoreSettings>(StoreSettings.empty);
   static bool _loaded = false;
