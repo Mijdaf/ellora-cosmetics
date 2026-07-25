@@ -4,8 +4,10 @@ import '../screens/product_detail_screen.dart';
 import '../theme/app_theme.dart';
 import 'fly_to_cart.dart';
 
-/// A product card that tilts in 3D space toward the cursor and lifts
-/// with a matching shadow — a lightweight, dependency-free "3D hover" effect.
+/// A product card with a subtle hover highlight (border/shadow) and a
+/// one-time entrance animation. Used to tilt toward the cursor on hover,
+/// but that constantly nudged the "+" button around under the pointer and
+/// made it hard to tap accurately — removed in favor of a stationary card.
 class ProductCard3D extends StatefulWidget {
   final Product product;
   final bool isArabic;
@@ -29,7 +31,6 @@ class ProductCard3D extends StatefulWidget {
 }
 
 class _ProductCard3DState extends State<ProductCard3D> with SingleTickerProviderStateMixin {
-  Offset _local = Offset.zero;
   bool _hovering = false;
   late final AnimationController _entrance;
 
@@ -49,12 +50,6 @@ class _ProductCard3DState extends State<ProductCard3D> with SingleTickerProvider
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (context, constraints) {
-      final w = constraints.maxWidth;
-      final h = constraints.maxHeight == double.infinity ? 260.0 : constraints.maxHeight;
-
-      final rotY = _hovering ? ((_local.dx / w) - 0.5) * 0.55 : 0.0;
-      final rotX = _hovering ? ((_local.dy / h) - 0.5) * -0.55 : 0.0;
-
       return AnimatedBuilder(
         animation: _entrance,
         builder: (context, child) {
@@ -69,23 +64,13 @@ class _ProductCard3DState extends State<ProductCard3D> with SingleTickerProvider
         },
         child: MouseRegion(
           onEnter: (_) => setState(() => _hovering = true),
-          onExit: (_) => setState(() {
-            _hovering = false;
-            _local = Offset.zero;
-          }),
-          onHover: (e) => setState(() => _local = e.localPosition),
+          onExit: (_) => setState(() => _hovering = false),
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: _openDetails,
             child: AnimatedContainer(
             duration: const Duration(milliseconds: 120),
             curve: Curves.easeOut,
-            transform: Matrix4.identity()
-              ..setEntry(3, 2, 0.0012)
-              ..rotateX(rotX)
-              ..rotateY(rotY)
-              ..scale(_hovering ? 1.03 : 1.0),
-            transformAlignment: Alignment.center,
             decoration: BoxDecoration(
               color: AppColors.surfaceCream,
               borderRadius: BorderRadius.circular(20),
@@ -95,9 +80,9 @@ class _ProductCard3DState extends State<ProductCard3D> with SingleTickerProvider
               ),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.espressoDeep.withOpacity(_hovering ? 0.28 : 0.12),
-                  blurRadius: _hovering ? 30 : 14,
-                  offset: Offset(rotY * -20, 14 + (_hovering ? 6 : 0)),
+                  color: AppColors.espressoDeep.withOpacity(_hovering ? 0.22 : 0.12),
+                  blurRadius: _hovering ? 22 : 14,
+                  offset: const Offset(0, 10),
                 ),
               ],
             ),
@@ -107,9 +92,7 @@ class _ProductCard3DState extends State<ProductCard3D> with SingleTickerProvider
               children: [
                 Expanded(
                   child: Center(
-                    child: Transform.scale(
-                      scale: _hovering ? 1.1 : 1.0,
-                      child: (widget.product.imageUrl != null || widget.product.imageBytes != null)
+                    child: (widget.product.imageUrl != null || widget.product.imageBytes != null)
                           ? ClipRRect(
                               borderRadius: BorderRadius.circular(14),
                               child: widget.product.imageUrl != null
@@ -129,7 +112,6 @@ class _ProductCard3DState extends State<ProductCard3D> with SingleTickerProvider
                                     ),
                             )
                           : Text(widget.product.emoji, style: const TextStyle(fontSize: 56)),
-                    ),
                   ),
                 ),
                 const SizedBox(height: 10),

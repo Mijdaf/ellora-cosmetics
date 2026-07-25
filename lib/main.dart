@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_web_plugins/url_strategy.dart';
 import 'theme/app_theme.dart';
 import 'services/app_language.dart';
 import 'screens/splash_screen.dart';
@@ -7,6 +8,13 @@ import 'services/supabase_config.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  // Without this, Flutter web only recognizes routes after a '#' (e.g.
+  // yoursite.com/#/admin). Typing or bookmarking a plain yoursite.com/admin
+  // (no '#') then resolves to '/' instead — which loads the splash screen,
+  // and its fixed 5s timer then pushes HomeScreen next, looking exactly
+  // like "the dashboard kicks me back to the site 5 seconds after I open
+  // it." This makes '/admin' (no '#') work the same as '/#/admin'.
+  usePathUrlStrategy();
   // Poppins (English) and Cairo (Arabic) are both bundled locally
   // (assets/fonts/) and referenced via fontFamily everywhere, so first
   // paint never waits on a font network request at all.
@@ -45,8 +53,8 @@ class NafasApp extends StatelessWidget {
         initialRoute: WidgetsBinding.instance.platformDispatcher.defaultRouteName,
         // The admin dashboard has no link in the storefront's nav bar on
         // purpose — shoppers shouldn't stumble into it. It's reached
-        // directly by URL instead: on Flutter web that's yoursite.com/#/admin
-        // (or yoursite.com/admin if the app uses path-based URL strategy).
+        // directly by URL instead: yoursite.com/admin (thanks to
+        // usePathUrlStrategy() above — no '#' needed).
         routes: {
           '/': (context) => const SplashScreen(),
           '/admin': (context) => const AdminGateScreen(),

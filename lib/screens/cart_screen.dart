@@ -1,9 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show Clipboard, ClipboardData;
+import 'package:url_launcher/url_launcher.dart';
 import '../models/order.dart';
 import '../models/product.dart';
 import '../services/app_language.dart';
+import '../services/store_settings.dart';
 import '../services/whatsapp_notify.dart';
 import '../theme/app_theme.dart';
 import '../widgets/animated_background.dart';
@@ -381,14 +384,23 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
     try {
       await OrderStore.add(order);
       // Best-effort: opens a wa.me link with the order details pre-filled
-      // so the owner just has to tap send — no API/token involved. Never
+      // so the customer just has to tap send — no API/token involved. Never
       // blocks or fails the checkout if it can't open.
       unawaited(WhatsAppNotify.sendOrder(order));
       if (!mounted) return;
-      Navigator.of(context).pop(); // close the checkout dialog itself
+      final navigator = Navigator.of(context);
+      final messenger = ScaffoldMessenger.of(context); // grabbed before popping, so it survives the dialog closing
+      navigator.pop(); // close the checkout dialog itself
       widget.onOrderPlaced();
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(content: Text(S.t('order_placed', widget.isArabic))),
+      );
+      // Tell the customer WhatsApp is already open with their order
+      // details filled in, so they know to tap Send there to confirm.
+      final cartContext = navigator.context;
+      showDialog(
+        context: cartContext,
+        builder: (_) => _SendWhatsAppReminderDialog(isDark: widget.isDark, isArabic: widget.isArabic),
       );
     } catch (e) {
       if (mounted) {
@@ -475,6 +487,10 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
                           contentPadding: EdgeInsets.zero,
                           dense: true,
                         ),
+                        if (_paymentMethod != 'cod') ...[
+                          const SizedBox(height: 8),
+                          _PayNowLink(paymentMethod: _paymentMethod, isArabic: widget.isArabic, textColor: textColor),
+                        ],
                       ],
                     ),
                   ),
@@ -502,6 +518,117 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Shown under the payment-method radios once InstaPay or Vodafone Cash is
+/// selected. InstaPay opens the owner's payment link directly; Vodafone
+/// Cash has no universal deep link, so it just shows the number with a
+/// tap-to-copy action — the customer sends the transfer themselves from
+/// their own Vodafone Cash app, then taps "Place order". Both values come
+/// live from `StoreSettingsStore`, which the owner edits from the
+/// dashboard's Settings tab — nothing hardcoded here.
+class _PayNowLink extends StatelessWidget {
+  final String paymentMethod;
+  final bool isArabic;
+  final Color textColor;
+  const _PayNowLink({required this.paymentMethod, required this.isArabic, required this.textColor});
+
+  Future<void> _openInstapay(BuildContext context, String link) async {
+    final uri = Uri.parse(link);
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      // Non-fatal — the customer can still place the order and pay another way.
+    }
+  }
+
+  Future<void> _copyVodafoneNumber(BuildContext context, String number) async {
+    await Clipboard.setData(ClipboardData(text: number));
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(S.t('number_copied', isArabic))),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isInstapay = paymentMethod == 'instapay';
+    return ValueListenableBuilder<StoreSettings>(
+      valueListenable: StoreSettingsStore.settings,
+      builder: (context, settings, __) {
+        final link = settings.instapayLink;
+        final number = settings.vodafoneCashNumber;
+        // Not configured from the dashboard yet — nothing useful to show.
+        if (isInstapay && link.isEmpty) return const SizedBox.shrink();
+        if (!isInstapay && number.isEmpty) return const SizedBox.shrink();
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: AppColors.wheatGold.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: [
+              Icon(isInstapay ? Icons.link_rounded : Icons.copy_rounded, size: 16, color: textColor.withOpacity(0.8)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: isInstapay
+                    ? Text(S.t('pay_via_instapay', isArabic), style: TextStyle(fontSize: 12.5, color: textColor))
+                    : Text(
+                        S.t('vodafone_cash_send_to', isArabic).replaceAll('%s', number),
+                        style: TextStyle(fontSize: 12.5, color: textColor),
+                      ),
+              ),
+              TextButton(
+                onPressed: () => isInstapay ? _openInstapay(context, link) : _copyVodafoneNumber(context, number),
+                child: Text(
+                  isInstapay ? S.t('pay_via_instapay', isArabic) : S.t('pay_via_vodafone_cash', isArabic),
+                  style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Small confirmation dialog shown right after an order is placed,
+/// reminding the customer that WhatsApp is already open (via
+/// [WhatsAppNotify.sendOrder]) with their order details filled in, and
+/// that they still need to tap Send there themselves.
+class _SendWhatsAppReminderDialog extends StatelessWidget {
+  final bool isDark;
+  final bool isArabic;
+  const _SendWhatsAppReminderDialog({required this.isDark, required this.isArabic});
+
+  @override
+  Widget build(BuildContext context) {
+    final textColor = isDark ? AppColors.cream : AppColors.espressoDeep;
+    return AlertDialog(
+      backgroundColor: isDark ? AppColors.espressoDark : AppColors.cream,
+      icon: const Icon(Icons.chat_rounded, color: AppColors.wheatGoldDark, size: 32),
+      title: Text(
+        S.t('send_whatsapp_title', isArabic),
+        style: TextStyle(fontWeight: FontWeight.w700, color: textColor),
+        textAlign: TextAlign.center,
+      ),
+      content: Text(
+        S.t('send_whatsapp_body', isArabic),
+        style: TextStyle(fontSize: 13.5, color: textColor.withOpacity(0.85)),
+        textAlign: TextAlign.center,
+      ),
+      actionsAlignment: MainAxisAlignment.center,
+      actions: [
+        ElevatedButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(S.t('got_it', isArabic)),
+        ),
+      ],
     );
   }
 }

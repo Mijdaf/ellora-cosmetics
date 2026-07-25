@@ -6,13 +6,15 @@ import '../models/category.dart';
 import '../models/home_banner.dart';
 import '../models/order.dart';
 import '../models/product.dart';
+import '../services/store_settings.dart';
 import '../services/supabase_config.dart';
 import '../theme/app_theme.dart';
 
-/// Admin dashboard for managing the product catalog, home banners, and
-/// orders. Every change writes straight through to Supabase, then updates
-/// the local `ProductStore` / `HomeBannerStore` / `OrderStore` — which the
-/// storefront (and this screen) listen to directly.
+/// Admin dashboard for managing the product catalog, home banners,
+/// orders, and store settings. Every change writes straight through to
+/// Supabase, then updates the local `ProductStore` / `HomeBannerStore` /
+/// `OrderStore` / `StoreSettingsStore` — which the storefront (and this
+/// screen) listen to directly.
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
 
@@ -24,12 +26,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   @override
   void initState() {
     super.initState();
-    // Orders (and a fresh view of products/banners) are only visible once
-    // logged in, so fetch them the moment the dashboard mounts.
+    // Orders (and a fresh view of products/banners/settings) are only
+    // visible once logged in, so fetch them the moment the dashboard mounts.
     ProductStore.loadAll();
     HomeBannerStore.loadAll();
     OrderStore.loadAll();
     CategoryStore.loadAll();
+    StoreSettingsStore.loadAll();
   }
 
   @override
@@ -61,7 +64,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       // form, update the instant the owner adds/removes one.
                       valueListenable: CategoryStore.categories,
                       builder: (context, allCategories, _____) {
-                        return Scaffold(
+                        return ValueListenableBuilder<StoreSettings>(
+                          // Listens to the live store settings so the
+                          // Settings tab reflects the saved values.
+                          valueListenable: StoreSettingsStore.settings,
+                          builder: (context, storeSettings, ______) {
+                            return Scaffold(
                           backgroundColor: bg,
                           body: SafeArea(
                             child: LayoutBuilder(
@@ -83,6 +91,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                             banners: allBanners,
                                             orders: allOrders,
                                             categories: allCategories,
+                                            settings: storeSettings,
                                           ),
                                           const SizedBox(height: 28),
                                         ],
@@ -93,6 +102,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                               },
                             ),
                           ),
+                            );
+                          },
                         );
                       },
                     );
@@ -111,18 +122,19 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 // Dashboard tabs — icon switcher between Orders / Banners / Categories / Products
 // ---------------------------------------------------------------------------
 
-enum _DashboardSection { orders, banners, categories, products }
+enum _DashboardSection { orders, banners, categories, products, settings }
 
 /// The icon row at the top of the dashboard body that switches which
-/// section is visible below — Orders, Banners, Categories, or Products — so
-/// the owner sees one focused panel at a time instead of one long page with
-/// everything stacked on top of each other.
+/// section is visible below — Orders, Banners, Categories, Products, or
+/// Settings — so the owner sees one focused panel at a time instead of one
+/// long page with everything stacked on top of each other.
 class _DashboardTabs extends StatefulWidget {
   final bool isDark;
   final List<Product> products;
   final List<HomeBanner> banners;
   final List<Order> orders;
   final List<Category> categories;
+  final StoreSettings settings;
 
   const _DashboardTabs({
     required this.isDark,
@@ -130,6 +142,7 @@ class _DashboardTabs extends StatefulWidget {
     required this.banners,
     required this.orders,
     required this.categories,
+    required this.settings,
   });
 
   @override
@@ -183,6 +196,15 @@ class _DashboardTabsState extends State<_DashboardTabs> {
               selected: _selected == _DashboardSection.products,
               onTap: () => setState(() => _selected = _DashboardSection.products),
             ),
+            const SizedBox(width: 12),
+            _TabIconButton(
+              icon: Icons.settings_rounded,
+              label: 'Settings',
+              badgeCount: 0,
+              isDark: widget.isDark,
+              selected: _selected == _DashboardSection.settings,
+              onTap: () => setState(() => _selected = _DashboardSection.settings),
+            ),
           ],
         ),
         const SizedBox(height: 24),
@@ -191,6 +213,7 @@ class _DashboardTabsState extends State<_DashboardTabs> {
           _DashboardSection.banners => _BannerManager(banners: widget.banners, isDark: widget.isDark),
           _DashboardSection.categories => _CategoryManager(categories: widget.categories, isDark: widget.isDark),
           _DashboardSection.products => _ProductManager(products: widget.products, categories: widget.categories, isDark: widget.isDark),
+          _DashboardSection.settings => _SettingsManager(settings: widget.settings, isDark: widget.isDark),
         },
       ],
     );
@@ -1619,6 +1642,170 @@ class _ImageUploadField extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Settings — WhatsApp number, InstaPay link, Vodafone Cash number
+// ---------------------------------------------------------------------------
+
+/// Lets the owner edit the three checkout-facing contact/payment values
+/// without touching code: the WhatsApp number new orders are sent to, the
+/// InstaPay payment link, and the Vodafone Cash number. Saved straight to
+/// the single `store_settings` row in Supabase; the storefront picks up
+/// the change the next time it loads.
+class _SettingsManager extends StatefulWidget {
+  final StoreSettings settings;
+  final bool isDark;
+  const _SettingsManager({required this.settings, required this.isDark});
+
+  @override
+  State<_SettingsManager> createState() => _SettingsManagerState();
+}
+
+class _SettingsManagerState extends State<_SettingsManager> {
+  late final TextEditingController _whatsappController;
+  late final TextEditingController _instapayController;
+  late final TextEditingController _vodafoneController;
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _whatsappController = TextEditingController(text: widget.settings.whatsappNumber);
+    _instapayController = TextEditingController(text: widget.settings.instapayLink);
+    _vodafoneController = TextEditingController(text: widget.settings.vodafoneCashNumber);
+  }
+
+  @override
+  void didUpdateWidget(covariant _SettingsManager old) {
+    super.didUpdateWidget(old);
+    // Keep the fields in sync if settings were reloaded from elsewhere
+    // (e.g. right after loadAll() on dashboard open), but don't stomp on
+    // text the owner is actively editing.
+    if (!_saving) {
+      _whatsappController.text = widget.settings.whatsappNumber;
+      _instapayController.text = widget.settings.instapayLink;
+      _vodafoneController.text = widget.settings.vodafoneCashNumber;
+    }
+  }
+
+  @override
+  void dispose() {
+    _whatsappController.dispose();
+    _instapayController.dispose();
+    _vodafoneController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    setState(() => _saving = true);
+    try {
+      await StoreSettingsStore.update(StoreSettings(
+        whatsappNumber: _whatsappController.text.trim(),
+        instapayLink: _instapayController.text.trim(),
+        vodafoneCashNumber: _vodafoneController.text.trim(),
+      ));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Settings saved')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not save settings: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final textColor = widget.isDark ? AppColors.cream : AppColors.espressoDeep;
+    final cardColor = widget.isDark ? Colors.white.withOpacity(0.06) : AppColors.cream;
+
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.cardBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Settings', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textColor)),
+          const SizedBox(height: 6),
+          Text(
+            'These control what customers see at checkout — no code changes needed. '
+            'Run the store_settings table SQL once from your Supabase project if this is the first save.',
+            style: TextStyle(fontSize: 12.5, color: textColor.withOpacity(0.6)),
+          ),
+          const SizedBox(height: 20),
+          _SettingsField(
+            label: 'WhatsApp number',
+            hint: 'Country code + number, digits only — e.g. 201001234567',
+            controller: _whatsappController,
+            textColor: textColor,
+          ),
+          const SizedBox(height: 14),
+          _SettingsField(
+            label: 'InstaPay payment link',
+            hint: 'From the InstaPay app: Profile → Payment Link',
+            controller: _instapayController,
+            textColor: textColor,
+          ),
+          const SizedBox(height: 14),
+          _SettingsField(
+            label: 'Vodafone Cash number',
+            hint: 'The wallet number customers send transfers to',
+            controller: _vodafoneController,
+            textColor: textColor,
+          ),
+          const SizedBox(height: 20),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: ElevatedButton(
+              onPressed: _saving ? null : _save,
+              child: _saving
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2.2, color: AppColors.espressoDeep),
+                    )
+                  : const Text('Save'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SettingsField extends StatelessWidget {
+  final String label;
+  final String hint;
+  final TextEditingController controller;
+  final Color textColor;
+  const _SettingsField({required this.label, required this.hint, required this.controller, required this.textColor});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: textColor)),
+        const SizedBox(height: 6),
+        TextField(
+          controller: controller,
+          style: TextStyle(fontSize: 13.5, color: textColor),
+          decoration: InputDecoration(hintText: hint, hintStyle: TextStyle(fontSize: 12.5, color: textColor.withOpacity(0.4))),
+        ),
+      ],
     );
   }
 }

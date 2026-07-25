@@ -90,6 +90,14 @@ class S {
     'could_not_place_order': 'Could not place order',
     'item_one': 'item',
     'item_other': 'items',
+    'pay_via_instapay': 'Pay via InstaPay',
+    'pay_via_vodafone_cash': 'Send via Vodafone Cash',
+    'vodafone_cash_send_to': 'Send to: %s',
+    'number_copied': 'Number copied',
+    'send_whatsapp_title': 'One last step',
+    'send_whatsapp_body':
+        'We\'ve opened WhatsApp with your order details filled in — just tap Send to confirm your order with us.',
+    'got_it': 'Got it',
 
     // Product detail
     'added_to_cart': 'Added to cart',
@@ -160,6 +168,13 @@ class S {
     'could_not_place_order': 'تعذر إتمام الطلب',
     'item_one': 'قطعة',
     'item_other': 'قطع',
+    'pay_via_instapay': 'ادفع عبر إنستاباي',
+    'pay_via_vodafone_cash': 'حوّل عبر فودافون كاش',
+    'vodafone_cash_send_to': 'حوّل إلى: %s',
+    'number_copied': 'تم نسخ الرقم',
+    'send_whatsapp_title': 'خطوة أخيرة',
+    'send_whatsapp_body': 'فتحنا لك واتساب برسالة جاهزة بتفاصيل طلبك — اضغط إرسال لتأكيد طلبك معنا.',
+    'got_it': 'تمام',
 
     // Product detail
     'added_to_cart': 'أُضيف إلى السلة',

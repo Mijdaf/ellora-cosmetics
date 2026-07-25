@@ -1,6 +1,7 @@
 import 'package:url_launcher/url_launcher.dart';
 
 import '../models/order.dart';
+import 'store_settings.dart';
 
 /// Sends new-order details to the owner over WhatsApp using a plain
 /// `wa.me` deep link (no WhatsApp Business API / no token needed) — it
@@ -9,15 +10,14 @@ import '../models/order.dart';
 class WhatsAppNotify {
   WhatsAppNotify._();
 
-  /// The owner's WhatsApp number in international format, digits only
-  /// (country code + number, no leading `+` or `00`).
-  /// e.g. Egypt: '201001234567'
-  static const String ownerPhone = '201001234567'; // TODO: replace with the real owner number
-
   /// Builds the wa.me link for a placed [order] and opens it in a new
   /// tab/WhatsApp app. Best-effort: if it fails to launch (e.g. popup
-  /// blocked), it's silently ignored so it never blocks checkout.
+  /// blocked) or the owner hasn't set a WhatsApp number yet from the
+  /// dashboard's Settings tab, it's silently ignored so it never blocks
+  /// checkout.
   static Future<void> sendOrder(Order order) async {
+    final ownerPhone = StoreSettingsStore.settings.value.whatsappNumber;
+    if (ownerPhone.isEmpty) return;
     final message = _buildMessage(order);
     final uri = Uri.parse(
       'https://wa.me/$ownerPhone?text=${Uri.encodeComponent(message)}',

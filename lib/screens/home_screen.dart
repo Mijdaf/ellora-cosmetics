@@ -7,6 +7,7 @@ import '../models/category.dart';
 import '../models/home_banner.dart';
 import '../models/product.dart';
 import '../services/app_language.dart';
+import '../services/store_settings.dart';
 import '../theme/app_theme.dart';
 import '../widgets/animated_background.dart';
 import '../widgets/hero_section.dart';
@@ -114,6 +115,7 @@ class _HomeScreenState extends State<HomeScreen> {
     ProductStore.ensureLoaded();
     HomeBannerStore.ensureLoaded();
     CategoryStore.ensureLoaded();
+    StoreSettingsStore.ensureLoaded();
     _scrollController.addListener(() {
       final p = (_scrollController.offset / 140).clamp(0.0, 1.0);
       if (p != _scrollProgress) setState(() => _scrollProgress = p);
