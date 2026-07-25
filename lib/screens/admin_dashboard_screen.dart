@@ -9,6 +9,7 @@ import '../models/product.dart';
 import '../services/store_settings.dart';
 import '../services/supabase_config.dart';
 import '../theme/app_theme.dart';
+import '../utils/text_dir.dart';
 
 /// Admin dashboard for managing the product catalog, home banners,
 /// orders, and store settings. Every change writes straight through to
@@ -1256,7 +1257,12 @@ class _ProductRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(product.name, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: textColor)),
+                Text(
+                  product.name,
+                  textDirection: autoTextDirection(product.name),
+                  textAlign: autoTextAlign(product.name),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: textColor),
+                ),
                 const SizedBox(height: 3),
                 Text(
                   '${product.category.isEmpty ? 'Uncategorized' : product.category} · ${formatEGP(product.price)}',
@@ -1435,10 +1441,15 @@ class _ProductFormDialogState extends State<_ProductFormDialog> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        TextFormField(
-                          controller: _name,
-                          decoration: const InputDecoration(labelText: 'Name'),
-                          validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+                        ValueListenableBuilder<TextEditingValue>(
+                          valueListenable: _name,
+                          builder: (context, value, __) => TextFormField(
+                            controller: _name,
+                            textDirection: autoTextDirection(value.text),
+                            textAlign: autoTextAlign(value.text),
+                            decoration: const InputDecoration(labelText: 'Name (English or Arabic)'),
+                            validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+                          ),
                         ),
                         const SizedBox(height: 12),
                         _ImageUploadField(
@@ -1454,11 +1465,16 @@ class _ProductFormDialogState extends State<_ProductFormDialog> {
                                   }),
                         ),
                         const SizedBox(height: 12),
-                        TextFormField(
-                          controller: _description,
-                          decoration: const InputDecoration(labelText: 'Description'),
-                          maxLines: 2,
-                          validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+                        ValueListenableBuilder<TextEditingValue>(
+                          valueListenable: _description,
+                          builder: (context, value, __) => TextFormField(
+                            controller: _description,
+                            textDirection: autoTextDirection(value.text),
+                            textAlign: autoTextAlign(value.text),
+                            decoration: const InputDecoration(labelText: 'Description (English or Arabic)'),
+                            maxLines: 2,
+                            validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+                          ),
                         ),
                         const SizedBox(height: 12),
                         Row(

@@ -3,6 +3,7 @@ import '../models/category.dart';
 import '../models/product.dart';
 import '../services/app_language.dart';
 import '../theme/app_theme.dart';
+import '../utils/text_dir.dart';
 import '../widgets/animated_background.dart';
 
 /// Full-page product detail screen — pushed as its own route instead of a
@@ -317,8 +318,10 @@ class _Details extends StatelessWidget {
         const SizedBox(height: 10),
         Text(
           p.name,
+          textDirection: autoTextDirection(p.name),
+          textAlign: autoTextAlign(p.name),
           style: TextStyle(
-            fontFamily: AppTheme.fontFor(isArabic),
+            fontFamily: AppTheme.fontFor(isArabicText(p.name)),
             fontWeight: FontWeight.w600,
             fontSize: 38,
             height: 1.08,
@@ -343,7 +346,12 @@ class _Details extends StatelessWidget {
           style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 30, color: AppColors.wheatGoldDark),
         ),
         const SizedBox(height: 22),
-        Text(p.description, style: TextStyle(color: mutedColor, fontSize: 16, height: 1.6)),
+        Text(
+          p.description,
+          textDirection: autoTextDirection(p.description),
+          textAlign: autoTextAlign(p.description),
+          style: TextStyle(color: mutedColor, fontSize: 16, height: 1.6),
+        ),
         if (p.story.isNotEmpty) ...[
           const SizedBox(height: 16),
           Container(
@@ -355,6 +363,8 @@ class _Details extends StatelessWidget {
             ),
             child: Text(
               p.story,
+              textDirection: autoTextDirection(p.story),
+              textAlign: autoTextAlign(p.story),
               style: TextStyle(
                 color: textColor.withOpacity(0.85),
                 fontSize: 13.5,

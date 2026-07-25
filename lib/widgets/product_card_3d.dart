@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/product.dart';
 import '../screens/product_detail_screen.dart';
 import '../theme/app_theme.dart';
+import '../utils/text_dir.dart';
 import 'fly_to_cart.dart';
 
 /// A product card with a subtle hover highlight (border/shadow) and a
@@ -53,6 +54,7 @@ class _ProductCard3DState extends State<ProductCard3D> with SingleTickerProvider
   Widget build(BuildContext context) {
     final cardColor = widget.isDark ? AppColors.espresso : AppColors.surfaceCream;
     final titleColor = widget.isDark ? AppColors.cream : AppColors.espressoDeep;
+    final descColor = (widget.isDark ? AppColors.cream : AppColors.espressoDark).withOpacity(0.7);
     final priceColor = widget.isDark ? AppColors.wheatGoldLight : AppColors.espressoDeep;
 
     return LayoutBuilder(builder: (context, constraints) {
@@ -101,74 +103,80 @@ class _ProductCard3DState extends State<ProductCard3D> with SingleTickerProvider
                 children: [
                   // Image fills the card edge-to-edge, no padding/border around it.
                   Expanded(
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        (widget.product.imageUrl != null || widget.product.imageBytes != null)
-                            ? SizedBox(
-                                width: double.infinity,
-                                height: double.infinity,
-                                child: widget.product.imageUrl != null
-                                    ? Image.network(
-                                        widget.product.imageUrl!,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (_, __, ___) => _ImagePlaceholder(emoji: widget.product.emoji),
-                                      )
-                                    : Image.memory(
-                                        widget.product.imageBytes!,
-                                        fit: BoxFit.cover,
-                                      ),
-                              )
-                            : _ImagePlaceholder(emoji: widget.product.emoji),
-                        if (widget.product.tags.isNotEmpty)
-                          PositionedDirectional(
-                            top: 10,
-                            start: 10,
-                            child: _TagRibbon(text: widget.product.tags.first),
-                          ),
-                      ],
-                    ),
+                    child: (widget.product.imageUrl != null || widget.product.imageBytes != null)
+                        ? SizedBox(
+                            width: double.infinity,
+                            height: double.infinity,
+                            child: widget.product.imageUrl != null
+                                ? Image.network(
+                                    widget.product.imageUrl!,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) => _ImagePlaceholder(emoji: widget.product.emoji),
+                                  )
+                                : Image.memory(
+                                    widget.product.imageBytes!,
+                                    fit: BoxFit.cover,
+                                  ),
+                          )
+                        : _ImagePlaceholder(emoji: widget.product.emoji),
                   ),
                   // Everything else keeps its own padding, separate from the image.
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(14, 12, 14, 16),
+                    padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (widget.product.category.isNotEmpty)
-                          Text(
-                            widget.product.category.toUpperCase(),
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              color: AppColors.wheatGoldDark,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 10.5,
-                              letterSpacing: 0.6,
+                        if (widget.product.tags.isNotEmpty)
+                          Container(
+                            margin: const EdgeInsets.only(bottom: 6),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: AppColors.wheatGold.withOpacity(0.18),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              widget.product.tags.first,
+                              style: const TextStyle(
+                                color: AppColors.wheatGoldDark,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 11,
+                              ),
                             ),
                           ),
-                        const SizedBox(height: 4),
                         Text(
                           widget.product.name,
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(color: titleColor, fontSize: 17),
+                          textDirection: autoTextDirection(widget.product.name),
+                          textAlign: autoTextAlign(widget.product.name),
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                color: titleColor,
+                                fontSize: 16.5,
+                                fontFamily: AppTheme.fontFor(isArabicText(widget.product.name)),
+                              ),
                           maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          widget.product.description,
+                          textDirection: autoTextDirection(widget.product.description),
+                          textAlign: autoTextAlign(widget.product.description),
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: descColor),
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 10),
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            _AddButton(onTap: widget.onAddToCart, product: widget.product),
-                            const SizedBox(width: 10),
                             Text(
                               formatEGP(widget.product.price),
                               style: TextStyle(
                                 fontWeight: FontWeight.w700,
-                                fontSize: 15.5,
+                                fontSize: 15,
                                 color: priceColor,
                               ),
                             ),
+                            _AddButton(onTap: widget.onAddToCart, product: widget.product),
                           ],
                         ),
                       ],
