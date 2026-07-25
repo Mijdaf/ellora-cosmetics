@@ -53,7 +53,6 @@ class _ProductCard3DState extends State<ProductCard3D> with SingleTickerProvider
   Widget build(BuildContext context) {
     final cardColor = widget.isDark ? AppColors.espresso : AppColors.surfaceCream;
     final titleColor = widget.isDark ? AppColors.cream : AppColors.espressoDeep;
-    final descColor = (widget.isDark ? AppColors.cream : AppColors.espressoDark).withOpacity(0.7);
     final priceColor = widget.isDark ? AppColors.wheatGoldLight : AppColors.espressoDeep;
 
     return LayoutBuilder(builder: (context, constraints) {
@@ -102,82 +101,74 @@ class _ProductCard3DState extends State<ProductCard3D> with SingleTickerProvider
                 children: [
                   // Image fills the card edge-to-edge, no padding/border around it.
                   Expanded(
-                    child: (widget.product.imageUrl != null || widget.product.imageBytes != null)
-                        ? SizedBox(
-                            width: double.infinity,
-                            height: double.infinity,
-                            child: widget.product.imageUrl != null
-                                ? Image.network(
-                                    widget.product.imageUrl!,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (_, __, ___) => Container(
-                                      color: cardColor,
-                                      child: Center(
-                                        child: Text(widget.product.emoji, style: const TextStyle(fontSize: 56)),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        (widget.product.imageUrl != null || widget.product.imageBytes != null)
+                            ? SizedBox(
+                                width: double.infinity,
+                                height: double.infinity,
+                                child: widget.product.imageUrl != null
+                                    ? Image.network(
+                                        widget.product.imageUrl!,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) => _ImagePlaceholder(emoji: widget.product.emoji),
+                                      )
+                                    : Image.memory(
+                                        widget.product.imageBytes!,
+                                        fit: BoxFit.cover,
                                       ),
-                                    ),
-                                  )
-                                : Image.memory(
-                                    widget.product.imageBytes!,
-                                    fit: BoxFit.cover,
-                                  ),
-                          )
-                        : Container(
-                            color: cardColor,
-                            child: Center(
-                              child: Text(widget.product.emoji, style: const TextStyle(fontSize: 56)),
-                            ),
+                              )
+                            : _ImagePlaceholder(emoji: widget.product.emoji),
+                        if (widget.product.tags.isNotEmpty)
+                          PositionedDirectional(
+                            top: 10,
+                            start: 10,
+                            child: _TagRibbon(text: widget.product.tags.first),
                           ),
+                      ],
+                    ),
                   ),
                   // Everything else keeps its own padding, separate from the image.
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(18, 10, 18, 18),
+                    padding: const EdgeInsets.fromLTRB(14, 12, 14, 16),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        if (widget.product.tags.isNotEmpty)
-                          Container(
-                            margin: const EdgeInsets.only(bottom: 6),
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: AppColors.wheatGold.withOpacity(0.18),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              widget.product.tags.first,
-                              style: const TextStyle(
-                                color: AppColors.wheatGoldDark,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 11,
-                              ),
+                        if (widget.product.category.isNotEmpty)
+                          Text(
+                            widget.product.category.toUpperCase(),
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: AppColors.wheatGoldDark,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 10.5,
+                              letterSpacing: 0.6,
                             ),
                           ),
+                        const SizedBox(height: 4),
                         Text(
                           widget.product.name,
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(color: titleColor),
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(color: titleColor, fontSize: 17),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 6),
-                        Text(
-                          widget.product.description,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: descColor),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 10),
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
+                            _AddButton(onTap: widget.onAddToCart, product: widget.product),
+                            const SizedBox(width: 10),
                             Text(
                               formatEGP(widget.product.price),
                               style: TextStyle(
                                 fontWeight: FontWeight.w700,
-                                fontSize: 16,
+                                fontSize: 15.5,
                                 color: priceColor,
                               ),
                             ),
-                            _AddButton(onTap: widget.onAddToCart, product: widget.product),
                           ],
                         ),
                       ],
@@ -210,6 +201,57 @@ class _ProductCard3DState extends State<ProductCard3D> with SingleTickerProvider
           },
         ),
       ),
+    );
+  }
+}
+
+/// Small badge shown over the top corner of the product image (e.g. for a
+/// featured/seasonal tag), mirroring the little ribbon-style label used on
+/// featured product cards elsewhere.
+class _TagRibbon extends StatelessWidget {
+  final String text;
+  const _TagRibbon({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: AppColors.wheatGold,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.18), blurRadius: 6, offset: const Offset(0, 2))],
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: AppColors.espressoDeep,
+          fontWeight: FontWeight.w800,
+          fontSize: 10.5,
+        ),
+      ),
+    );
+  }
+}
+
+/// Shown in place of the product photo when there isn't one (or it failed
+/// to load). Uses a wheat-gold tint distinct from the card's own
+/// background, so the image block always reads as a deliberate visual
+/// element instead of blending invisibly into the card — which is what
+/// happened before when this used the same color as the card itself.
+class _ImagePlaceholder extends StatelessWidget {
+  final String emoji;
+  const _ImagePlaceholder({required this.emoji});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      color: AppColors.wheatGold.withOpacity(0.14),
+      alignment: Alignment.center,
+      child: emoji.trim().isEmpty
+          ? Icon(Icons.bakery_dining_outlined, size: 40, color: AppColors.wheatGoldDark.withOpacity(0.6))
+          : Text(emoji, style: const TextStyle(fontSize: 56)),
     );
   }
 }

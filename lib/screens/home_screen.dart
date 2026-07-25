@@ -368,9 +368,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ? 4
                                   : constraints.maxWidth > 800
                                       ? 3
-                                      : constraints.maxWidth > 520
+                                      : constraints.maxWidth > 340
                                           ? 2
                                           : 1;
+                              final spacing = constraints.maxWidth > 520 ? 24.0 : 14.0;
                               return ValueListenableBuilder<bool>(
                                 valueListenable: ProductStore.isLoading,
                                 builder: (context, isLoading, __) {
@@ -397,9 +398,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                     itemCount: products.length,
                                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                                       crossAxisCount: cols,
-                                      crossAxisSpacing: 24,
-                                      mainAxisSpacing: 24,
-                                      childAspectRatio: 0.72,
+                                      crossAxisSpacing: spacing,
+                                      mainAxisSpacing: spacing,
+                                      childAspectRatio: 0.66,
                                     ),
                                     itemBuilder: (context, i) => _StaggeredEntrance(
                                       index: i,
