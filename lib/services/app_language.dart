@@ -35,6 +35,9 @@ class S {
     'subtotal': 'Subtotal',
     'browse_menu': 'Browse menu',
     'view_cart': 'View cart',
+    'you_might_also_like': 'You might also like',
+    'delivery_estimate': 'Estimated delivery within 2–4 business days',
+    'continue_shopping': 'Continue shopping',
 
     // Hero
     'hero_eyebrow': 'BAKED WITH LOVE, DAILY',
@@ -116,6 +119,9 @@ class S {
     'subtotal': 'الإجمالي',
     'browse_menu': 'تصفح القائمة',
     'view_cart': 'عرض السلة',
+    'you_might_also_like': 'قد يعجبك أيضًا',
+    'delivery_estimate': 'التوصيل المتوقع خلال 2–4 أيام عمل',
+    'continue_shopping': 'إكمال التسوق',
 
     // Hero
     'hero_eyebrow': 'يُخبز بحب، يوميًا',

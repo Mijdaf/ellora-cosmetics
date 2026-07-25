@@ -9,18 +9,20 @@ import '../services/app_language.dart';
 import '../services/store_settings.dart';
 import '../services/whatsapp_notify.dart';
 import '../theme/app_theme.dart';
-import '../widgets/animated_background.dart';
 
-/// Full shopping-cart screen. Reads a live [CartItem] list from the caller
-/// and reports changes back up through callbacks — the screen itself holds
-/// no cart state, so it always reflects whatever is currently in the cart
-/// on the home screen, even if the user backgrounds/returns to it.
+/// Cart shown as a centered modal dialog (via `showDialog`) instead of a
+/// full page — closer to the popup-cart pattern shoppers expect. Reads a
+/// live [CartItem] list from the caller and reports changes back up
+/// through callbacks; the screen itself holds no cart state.
 class CartScreen extends StatelessWidget {
   final List<CartItem> items;
   final bool isDark;
   final bool isArabic;
   final void Function(Product product, int quantity) onQuantityChanged;
   final void Function(Product product) onRemove;
+  // Adds one unit of a product the shopper doesn't have yet — used by the
+  // "You might also like" strip.
+  final void Function(Product product) onAddProduct;
   final VoidCallback onContinueShopping;
   // Called once an order has been placed (checkout form submitted), so the
   // caller (HomeScreen) can clear the live cart it owns.
@@ -33,6 +35,7 @@ class CartScreen extends StatelessWidget {
     required this.isArabic,
     required this.onQuantityChanged,
     required this.onRemove,
+    required this.onAddProduct,
     required this.onContinueShopping,
     required this.onOrderPlaced,
   });
@@ -43,51 +46,106 @@ class CartScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final bg = isDark ? AppColors.espressoDark : AppColors.surfaceCream;
     final textColor = isDark ? AppColors.cream : AppColors.espressoDeep;
+    final screenHeight = MediaQuery.of(context).size.height;
 
-    return Scaffold(
-      backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        foregroundColor: textColor,
-        title: Text(
-          S.t('your_cart', isArabic),
-          style: TextStyle(fontFamily: AppTheme.fontFor(isArabic), fontWeight: FontWeight.w600, fontSize: 22, color: textColor),
-        ),
-      ),
-      body: Stack(
-        children: [
-          Positioned.fill(child: AnimatedBackground(isDark: isDark)),
-          items.isEmpty
-              ? _EmptyCart(isDark: isDark, isArabic: isArabic, onContinueShopping: onContinueShopping)
-              : SafeArea(
-                  child: Column(
-                    children: [
-                      Expanded(
-                        child: ListView.separated(
-                          padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-                          itemCount: items.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: 14),
-                          itemBuilder: (context, i) => _CartTile(
-                            item: items[i],
-                            isDark: isDark,
-                            isArabic: isArabic,
-                            onQuantityChanged: (qty) => onQuantityChanged(items[i].product, qty),
-                            onRemove: () => onRemove(items[i].product),
-                          ),
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: 560, maxHeight: screenHeight * 0.86),
+        child: Container(
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: BorderRadius.circular(26),
+            border: Border.all(color: AppColors.cardBorder),
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.35), blurRadius: 40, offset: const Offset(0, 20))],
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Small grab-handle, purely decorative — signals "this is a sheet".
+              Padding(
+                padding: const EdgeInsets.only(top: 10, bottom: 2),
+                child: Container(width: 40, height: 4, decoration: BoxDecoration(color: textColor.withOpacity(0.18), borderRadius: BorderRadius.circular(4))),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 12, 8),
+                child: Row(
+                  children: [
+                    Icon(Icons.shopping_bag_rounded, size: 20, color: AppColors.wheatGoldDark),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        S.t('your_cart', isArabic),
+                        style: TextStyle(fontFamily: AppTheme.fontFor(isArabic), fontWeight: FontWeight.w700, fontSize: 19, color: textColor),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: onContinueShopping,
+                      icon: Icon(Icons.close_rounded, color: textColor.withOpacity(0.8)),
+                      tooltip: S.t('continue_shopping', isArabic),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1, color: AppColors.cardBorder),
+              Flexible(
+                child: items.isEmpty
+                    ? _EmptyCart(isDark: isDark, isArabic: isArabic, onContinueShopping: onContinueShopping)
+                    : SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ...List.generate(items.length, (i) {
+                              return Padding(
+                                padding: EdgeInsets.only(bottom: i == items.length - 1 ? 0 : 12),
+                                child: _CartTile(
+                                  item: items[i],
+                                  isDark: isDark,
+                                  isArabic: isArabic,
+                                  onQuantityChanged: (qty) => onQuantityChanged(items[i].product, qty),
+                                  onRemove: () => onRemove(items[i].product),
+                                ),
+                              );
+                            }),
+                            const SizedBox(height: 14),
+                            Row(
+                              children: [
+                                Icon(Icons.local_shipping_outlined, size: 15, color: textColor.withOpacity(0.6)),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    S.t('delivery_estimate', isArabic),
+                                    style: TextStyle(fontSize: 12.5, color: textColor.withOpacity(0.6)),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 20),
+                            _RecommendationsStrip(
+                              isDark: isDark,
+                              isArabic: isArabic,
+                              excludeNames: items.map((c) => c.product.name).toSet(),
+                              onAdd: onAddProduct,
+                            ),
+                          ],
                         ),
                       ),
-                      _CartSummary(
-                        subtotal: _subtotal,
-                        isDark: isDark,
-                        isArabic: isArabic,
-                        items: items,
-                        onOrderPlaced: onOrderPlaced,
-                      ),
-                    ],
-                  ),
+              ),
+              if (items.isNotEmpty)
+                _CartSummary(
+                  subtotal: _subtotal,
+                  isDark: isDark,
+                  isArabic: isArabic,
+                  items: items,
+                  onOrderPlaced: onOrderPlaced,
+                  onContinueShopping: onContinueShopping,
                 ),
-        ],
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -102,27 +160,30 @@ class _EmptyCart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textColor = isDark ? AppColors.cream : AppColors.espressoDeep;
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.shopping_bag_outlined, size: 64, color: AppColors.wheatGold.withOpacity(0.7)),
-          const SizedBox(height: 18),
-          Text(
-            S.t('cart_empty', isArabic),
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: textColor),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            S.t('cart_empty_body', isArabic),
-            style: TextStyle(fontSize: 14, color: textColor.withOpacity(0.7)),
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: onContinueShopping,
-            child: Text(S.t('browse_menu', isArabic)),
-          ),
-        ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 48),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.shopping_bag_outlined, size: 64, color: AppColors.wheatGold.withOpacity(0.7)),
+            const SizedBox(height: 18),
+            Text(
+              S.t('cart_empty', isArabic),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: textColor),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              S.t('cart_empty_body', isArabic),
+              style: TextStyle(fontSize: 14, color: textColor.withOpacity(0.7)),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: onContinueShopping,
+              child: Text(S.t('browse_menu', isArabic)),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -157,16 +218,22 @@ class _CartTile extends StatelessWidget {
         border: Border.all(color: AppColors.cardBorder),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 56,
-            height: 56,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
+          ClipRRect(
+            borderRadius: BorderRadius.circular(14),
+            child: Container(
+              width: 56,
+              height: 56,
+              alignment: Alignment.center,
               color: AppColors.wheatGold.withOpacity(0.14),
-              borderRadius: BorderRadius.circular(14),
+              child: (item.product.imageUrl != null || item.product.imageBytes != null)
+                  ? (item.product.imageUrl != null
+                      ? Image.network(item.product.imageUrl!, fit: BoxFit.cover, width: 56, height: 56,
+                          errorBuilder: (_, __, ___) => Text(item.product.emoji, style: const TextStyle(fontSize: 30)))
+                      : Image.memory(item.product.imageBytes!, fit: BoxFit.cover, width: 56, height: 56))
+                  : Text(item.product.emoji, style: const TextStyle(fontSize: 30)),
             ),
-            child: Text(item.product.emoji, style: const TextStyle(fontSize: 30)),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -184,6 +251,15 @@ class _CartTile extends StatelessWidget {
                   '${formatEGP(item.product.price)} ${S.t('each', isArabic)}',
                   style: TextStyle(fontSize: 12.5, color: subColor),
                 ),
+                if (item.product.description.isNotEmpty) ...[
+                  const SizedBox(height: 3),
+                  Text(
+                    item.product.description,
+                    style: TextStyle(fontSize: 11.5, color: subColor.withOpacity(0.85)),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ],
             ),
           ),
@@ -264,18 +340,148 @@ class _MiniButton extends StatelessWidget {
   }
 }
 
+/// "You might also like" horizontal strip — pulls from the live product
+/// catalog, skipping anything already in the cart, and lets the shopper
+/// add a suggestion straight from its quick-add "+" button.
+class _RecommendationsStrip extends StatelessWidget {
+  final bool isDark;
+  final bool isArabic;
+  final Set<String> excludeNames;
+  final void Function(Product product) onAdd;
+  const _RecommendationsStrip({
+    required this.isDark,
+    required this.isArabic,
+    required this.excludeNames,
+    required this.onAdd,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final textColor = isDark ? AppColors.cream : AppColors.espressoDeep;
+    return ValueListenableBuilder<List<Product>>(
+      valueListenable: ProductStore.products,
+      builder: (context, allProducts, __) {
+        final suggestions = allProducts.where((p) => !excludeNames.contains(p.name)).take(8).toList();
+        if (suggestions.isEmpty) return const SizedBox.shrink();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              S.t('you_might_also_like', isArabic),
+              style: TextStyle(fontFamily: AppTheme.fontFor(isArabic), fontWeight: FontWeight.w700, fontSize: 15, color: textColor),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              height: 168,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: suggestions.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 10),
+                itemBuilder: (context, i) => _RecommendationCard(
+                  product: suggestions[i],
+                  isDark: isDark,
+                  onAdd: () => onAdd(suggestions[i]),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _RecommendationCard extends StatelessWidget {
+  final Product product;
+  final bool isDark;
+  final VoidCallback onAdd;
+  const _RecommendationCard({required this.product, required this.isDark, required this.onAdd});
+
+  @override
+  Widget build(BuildContext context) {
+    final textColor = isDark ? AppColors.cream : AppColors.espressoDeep;
+    final cardColor = isDark ? Colors.white.withOpacity(0.05) : AppColors.surfaceCream;
+
+    return Container(
+      width: 128,
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.cardBorder),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Stack(
+            children: [
+              SizedBox(
+                height: 90,
+                width: double.infinity,
+                child: (product.imageUrl != null || product.imageBytes != null)
+                    ? (product.imageUrl != null
+                        ? Image.network(product.imageUrl!, fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(color: AppColors.wheatGold.withOpacity(0.14), child: Center(child: Text(product.emoji, style: const TextStyle(fontSize: 30)))))
+                        : Image.memory(product.imageBytes!, fit: BoxFit.cover))
+                    : Container(color: AppColors.wheatGold.withOpacity(0.14), child: Center(child: Text(product.emoji, style: const TextStyle(fontSize: 30)))),
+              ),
+              Positioned(
+                top: 6,
+                right: 6,
+                child: Material(
+                  color: AppColors.wheatGold,
+                  shape: const CircleBorder(),
+                  child: InkWell(
+                    onTap: onAdd,
+                    customBorder: const CircleBorder(),
+                    child: const Padding(
+                      padding: EdgeInsets.all(5),
+                      child: Icon(Icons.add_rounded, size: 14, color: AppColors.espressoDeep),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  product.name,
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5, color: textColor),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  formatEGP(product.price),
+                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: AppColors.wheatGoldDark),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _CartSummary extends StatelessWidget {
   final double subtotal;
   final bool isDark;
   final bool isArabic;
   final List<CartItem> items;
   final VoidCallback onOrderPlaced;
+  final VoidCallback onContinueShopping;
   const _CartSummary({
     required this.subtotal,
     required this.isDark,
     required this.isArabic,
     required this.items,
     required this.onOrderPlaced,
+    required this.onContinueShopping,
   });
 
   @override
@@ -285,46 +491,48 @@ class _CartSummary extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
       decoration: BoxDecoration(
         color: isDark ? AppColors.espressoDeep : AppColors.cream,
-        border: Border(top: BorderSide(color: AppColors.cardBorder)),
+        border: const Border(top: BorderSide(color: AppColors.cardBorder)),
       ),
-      child: SafeArea(
-        top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(S.t('subtotal', isArabic), style: TextStyle(fontSize: 15, color: textColor.withOpacity(0.75))),
-                Text(
-                  formatEGP(subtotal),
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: textColor),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => showDialog(
-                  context: context,
-                  builder: (_) => _CheckoutDialog(
-                    items: items,
-                    subtotal: subtotal,
-                    isDark: isDark,
-                    isArabic: isArabic,
-                    onOrderPlaced: () {
-                      onOrderPlaced();
-                      Navigator.of(context).pop(); // close cart, back to the storefront
-                    },
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
-                child: Text(S.t('checkout', isArabic)),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(S.t('subtotal', isArabic), style: TextStyle(fontSize: 15, color: textColor.withOpacity(0.75))),
+              Text(
+                formatEGP(subtotal),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: textColor),
               ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => showDialog(
+                context: context,
+                builder: (_) => _CheckoutDialog(
+                  items: items,
+                  subtotal: subtotal,
+                  isDark: isDark,
+                  isArabic: isArabic,
+                  onOrderPlaced: () {
+                    onOrderPlaced();
+                    Navigator.of(context).pop(); // close cart, back to the storefront
+                  },
+                ),
+              ),
+              style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
+              child: Text(S.t('checkout', isArabic)),
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 6),
+          TextButton(
+            onPressed: onContinueShopping,
+            child: Text(S.t('continue_shopping', isArabic), style: TextStyle(fontSize: 13, color: textColor.withOpacity(0.7))),
+          ),
+        ],
       ),
     );
   }

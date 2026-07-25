@@ -74,33 +74,37 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _openCart() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => StatefulBuilder(
-          builder: (context, setLocalState) => ValueListenableBuilder<bool>(
-            valueListenable: AppMood.isDark,
-            builder: (context, isDark, _) => ValueListenableBuilder<bool>(
-              valueListenable: AppLanguage.isArabic,
-              builder: (context, isArabic, __) => Directionality(
-                textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
-                child: CartScreen(
-                  items: _cartItems,
-                  isDark: isDark,
-                  isArabic: isArabic,
-                  onQuantityChanged: (product, quantity) {
-                    _setQuantity(product, quantity);
-                    setLocalState(() {});
-                  },
-                  onRemove: (product) {
-                    _removeFromCart(product);
-                    setLocalState(() {});
-                  },
-                  onContinueShopping: () => Navigator.of(context).pop(),
-                  onOrderPlaced: () {
-                    _clearCart();
-                    setLocalState(() {});
-                  },
-                ),
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.55),
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setLocalState) => ValueListenableBuilder<bool>(
+          valueListenable: AppMood.isDark,
+          builder: (context, isDark, _) => ValueListenableBuilder<bool>(
+            valueListenable: AppLanguage.isArabic,
+            builder: (context, isArabic, __) => Directionality(
+              textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+              child: CartScreen(
+                items: _cartItems,
+                isDark: isDark,
+                isArabic: isArabic,
+                onQuantityChanged: (product, quantity) {
+                  _setQuantity(product, quantity);
+                  setLocalState(() {});
+                },
+                onRemove: (product) {
+                  _removeFromCart(product);
+                  setLocalState(() {});
+                },
+                onAddProduct: (product) {
+                  _addToCart(product);
+                  setLocalState(() {});
+                },
+                onContinueShopping: () => Navigator.of(dialogContext).pop(),
+                onOrderPlaced: () {
+                  _clearCart();
+                  setLocalState(() {});
+                },
               ),
             ),
           ),
@@ -402,8 +406,15 @@ class _HomeScreenState extends State<HomeScreen> {
                                       child: ProductCard3D(
                                         product: products[i],
                                         isArabic: isArabic,
-                                        onAddToCart: () => _addToCart(products[i]),
-                                        onAddQuantity: (qty) => _addToCart(products[i], qty),
+                                        isDark: isDark,
+                                        onAddToCart: () {
+                                          _addToCart(products[i]);
+                                          _openCart();
+                                        },
+                                        onAddQuantity: (qty) {
+                                          _addToCart(products[i], qty);
+                                          _openCart();
+                                        },
                                       ),
                                     ),
                                   );

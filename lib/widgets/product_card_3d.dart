@@ -11,6 +11,7 @@ import 'fly_to_cart.dart';
 class ProductCard3D extends StatefulWidget {
   final Product product;
   final bool isArabic;
+  final bool isDark;
   final VoidCallback? onAddToCart;
 
   /// Called with a quantity (1+) when the shopper adds from the detail
@@ -22,6 +23,7 @@ class ProductCard3D extends StatefulWidget {
     super.key,
     required this.product,
     required this.isArabic,
+    this.isDark = true,
     this.onAddToCart,
     this.onAddQuantity,
   });
@@ -49,6 +51,11 @@ class _ProductCard3DState extends State<ProductCard3D> with SingleTickerProvider
 
   @override
   Widget build(BuildContext context) {
+    final cardColor = widget.isDark ? AppColors.espresso : AppColors.surfaceCream;
+    final titleColor = widget.isDark ? AppColors.cream : AppColors.espressoDeep;
+    final descColor = (widget.isDark ? AppColors.cream : AppColors.espressoDark).withOpacity(0.7);
+    final priceColor = widget.isDark ? AppColors.wheatGoldLight : AppColors.espressoDeep;
+
     return LayoutBuilder(builder: (context, constraints) {
       return AnimatedBuilder(
         animation: _entrance,
@@ -72,7 +79,7 @@ class _ProductCard3DState extends State<ProductCard3D> with SingleTickerProvider
             duration: const Duration(milliseconds: 120),
             curve: Curves.easeOut,
             decoration: BoxDecoration(
-              color: AppColors.surfaceCream,
+              color: cardColor,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
                 color: _hovering ? AppColors.wheatGold.withOpacity(0.55) : AppColors.cardBorder,
@@ -80,93 +87,109 @@ class _ProductCard3DState extends State<ProductCard3D> with SingleTickerProvider
               ),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.espressoDeep.withOpacity(_hovering ? 0.22 : 0.12),
+                  color: AppColors.espressoDeep.withOpacity(_hovering ? 0.28 : 0.16),
                   blurRadius: _hovering ? 22 : 14,
                   offset: const Offset(0, 10),
                 ),
               ],
             ),
-            padding: const EdgeInsets.all(18),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: (widget.product.imageUrl != null || widget.product.imageBytes != null)
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(14),
-                          child: SizedBox(
+            padding: EdgeInsets.zero,
+            child: ClipRRect(
+              // Slightly less than the card's own radius so the border ring still shows through.
+              borderRadius: BorderRadius.circular(19),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Image fills the card edge-to-edge, no padding/border around it.
+                  Expanded(
+                    child: (widget.product.imageUrl != null || widget.product.imageBytes != null)
+                        ? SizedBox(
                             width: double.infinity,
                             height: double.infinity,
                             child: widget.product.imageUrl != null
                                 ? Image.network(
                                     widget.product.imageUrl!,
                                     fit: BoxFit.cover,
-                                    errorBuilder: (_, __, ___) => Center(
-                                      child: Text(widget.product.emoji, style: const TextStyle(fontSize: 56)),
+                                    errorBuilder: (_, __, ___) => Container(
+                                      color: cardColor,
+                                      child: Center(
+                                        child: Text(widget.product.emoji, style: const TextStyle(fontSize: 56)),
+                                      ),
                                     ),
                                   )
                                 : Image.memory(
                                     widget.product.imageBytes!,
                                     fit: BoxFit.cover,
                                   ),
+                          )
+                        : Container(
+                            color: cardColor,
+                            child: Center(
+                              child: Text(widget.product.emoji, style: const TextStyle(fontSize: 56)),
+                            ),
                           ),
-                        )
-                      : Center(
-                          child: Text(widget.product.emoji, style: const TextStyle(fontSize: 56)),
+                  ),
+                  // Everything else keeps its own padding, separate from the image.
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(18, 10, 18, 18),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (widget.product.tags.isNotEmpty)
+                          Container(
+                            margin: const EdgeInsets.only(bottom: 6),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: AppColors.wheatGold.withOpacity(0.18),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              widget.product.tags.first,
+                              style: const TextStyle(
+                                color: AppColors.wheatGoldDark,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ),
+                        Text(
+                          widget.product.name,
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(color: titleColor),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                ),
-                const SizedBox(height: 10),
-                if (widget.product.tags.isNotEmpty)
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 6),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: AppColors.wheatGold.withOpacity(0.18),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      widget.product.tags.first,
-                      style: const TextStyle(
-                        color: AppColors.wheatGoldDark,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 11,
-                      ),
+                        const SizedBox(height: 6),
+                        Text(
+                          widget.product.description,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: descColor),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              formatEGP(widget.product.price),
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 16,
+                                color: priceColor,
+                              ),
+                            ),
+                            _AddButton(onTap: widget.onAddToCart, product: widget.product),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
-                Text(
-                  widget.product.name,
-                  style: Theme.of(context).textTheme.titleLarge,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  widget.product.description,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      formatEGP(widget.product.price),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 16,
-                        color: AppColors.espressoDeep,
-                      ),
-                    ),
-                    _AddButton(onTap: widget.onAddToCart, product: widget.product),
-                  ],
-                ),
-              ],
-            ),
+                ],
+              ),
             ),
           ),
         ),
-      );
+      ),
+    );
     });
   }
 
