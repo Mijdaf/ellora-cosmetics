@@ -37,27 +37,47 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
     // as long as the splash is on screen.
     _dotsController = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200))..repeat();
 
-    Future.delayed(_splashDuration, () async {
-      if (!mounted) return;
-      // If the browser tab got reloaded (e.g. the OS discarded a
-      // backgrounded tab to save memory/battery) while the admin was on
-      // the dashboard, the app boots fresh from here. Without this check
-      // it would always land on the public storefront, which looked like
-      // "the dashboard kicks me out to the site by itself". Supabase
-      // persists the session in the browser, so if one is still active
-      // we know it's the admin coming back — send them straight to the
-      // dashboard instead.
-      await SupabaseConfig.ready;
-      final isAdminSession = SupabaseConfig.isLoggedIn;
+    // Check for an active admin session as early as possible, in parallel
+    // with the entrance animation — don't wait for the full shopper-facing
+    // splash duration to find out. If the browser tab gets reloaded (OS
+    // discarding a backgrounded tab to save memory/battery, or a bookmark
+    // that points at the bare domain instead of '#/admin') while the admin
+    // is on the dashboard, this is what sends them straight back to the
+    // dashboard instead of forcing them through the public storefront —
+    // which is what looked like "the dashboard kicks me out to the site".
+    _decideDestination();
+  }
+
+  Future<void> _decideDestination() async {
+    await SupabaseConfig.ready;
+    if (!mounted) return;
+    final isAdminSession = SupabaseConfig.isLoggedIn;
+
+    if (isAdminSession) {
+      // Just enough time for the entrance animation to feel intentional,
+      // not the full 5s public splash — an admin bouncing back from a
+      // reload should land back on their dashboard almost immediately.
+      await Future.delayed(const Duration(milliseconds: 900));
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
           transitionDuration: const Duration(milliseconds: 500),
-          pageBuilder: (_, __, ___) => isAdminSession ? const AdminGateScreen() : const HomeScreen(),
+          pageBuilder: (_, __, ___) => const AdminGateScreen(),
           transitionsBuilder: (_, animation, __, child) => FadeTransition(opacity: animation, child: child),
         ),
       );
-    });
+      return;
+    }
+
+    await Future.delayed(_splashDuration);
+    if (!mounted) return;
+    Navigator.of(context).pushReplacement(
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 500),
+        pageBuilder: (_, __, ___) => const HomeScreen(),
+        transitionsBuilder: (_, animation, __, child) => FadeTransition(opacity: animation, child: child),
+      ),
+    );
   }
 
   @override
