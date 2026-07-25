@@ -196,23 +196,21 @@ class _HeroBanner extends StatelessWidget {
                 ),
               ),
               if (product.imageUrl != null || product.imageBytes != null)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(24),
-                  child: product.imageUrl != null
-                      ? Image.network(
-                          product.imageUrl!,
-                          width: 260,
-                          height: 260,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) =>
-                              Text(product.emoji, style: const TextStyle(fontSize: 190)),
-                        )
-                      : Image.memory(
-                          product.imageBytes!,
-                          width: 260,
-                          height: 260,
-                          fit: BoxFit.cover,
-                        ),
+                Positioned.fill(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.zero,
+                    child: product.imageUrl != null
+                        ? Image.network(
+                            product.imageUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) =>
+                                Center(child: Text(product.emoji, style: const TextStyle(fontSize: 190))),
+                          )
+                        : Image.memory(
+                            product.imageBytes!,
+                            fit: BoxFit.cover,
+                          ),
+                  ),
                 )
               else
                 Text(product.emoji, style: const TextStyle(fontSize: 190)),

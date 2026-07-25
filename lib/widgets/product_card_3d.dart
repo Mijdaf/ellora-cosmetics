@@ -91,28 +91,29 @@ class _ProductCard3DState extends State<ProductCard3D> with SingleTickerProvider
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: Center(
-                    child: (widget.product.imageUrl != null || widget.product.imageBytes != null)
-                          ? ClipRRect(
-                              borderRadius: BorderRadius.circular(14),
-                              child: widget.product.imageUrl != null
-                                  ? Image.network(
-                                      widget.product.imageUrl!,
-                                      width: 96,
-                                      height: 96,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (_, __, ___) =>
-                                          Text(widget.product.emoji, style: const TextStyle(fontSize: 56)),
-                                    )
-                                  : Image.memory(
-                                      widget.product.imageBytes!,
-                                      width: 96,
-                                      height: 96,
-                                      fit: BoxFit.cover,
+                  child: (widget.product.imageUrl != null || widget.product.imageBytes != null)
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(14),
+                          child: SizedBox(
+                            width: double.infinity,
+                            height: double.infinity,
+                            child: widget.product.imageUrl != null
+                                ? Image.network(
+                                    widget.product.imageUrl!,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) => Center(
+                                      child: Text(widget.product.emoji, style: const TextStyle(fontSize: 56)),
                                     ),
-                            )
-                          : Text(widget.product.emoji, style: const TextStyle(fontSize: 56)),
-                  ),
+                                  )
+                                : Image.memory(
+                                    widget.product.imageBytes!,
+                                    fit: BoxFit.cover,
+                                  ),
+                          ),
+                        )
+                      : Center(
+                          child: Text(widget.product.emoji, style: const TextStyle(fontSize: 56)),
+                        ),
                 ),
                 const SizedBox(height: 10),
                 if (widget.product.tags.isNotEmpty)

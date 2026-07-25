@@ -214,23 +214,21 @@ class _GalleryState extends State<_Gallery> {
                   ),
                 ),
                 if (p.imageUrl != null || p.imageBytes != null)
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(28),
-                    child: p.imageUrl != null
-                        ? Image.network(
-                            p.imageUrl!,
-                            width: 420,
-                            height: 420,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) =>
-                                Text(p.emoji, style: const TextStyle(fontSize: 260)),
-                          )
-                        : Image.memory(
-                            p.imageBytes!,
-                            width: 420,
-                            height: 420,
-                            fit: BoxFit.cover,
-                          ),
+                  Positioned.fill(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(28),
+                      child: p.imageUrl != null
+                          ? Image.network(
+                              p.imageUrl!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) =>
+                                  Center(child: Text(p.emoji, style: const TextStyle(fontSize: 260))),
+                            )
+                          : Image.memory(
+                              p.imageBytes!,
+                              fit: BoxFit.cover,
+                            ),
+                    ),
                   )
                 else
                   Text(p.emoji, style: const TextStyle(fontSize: 260)),
