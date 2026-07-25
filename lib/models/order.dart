@@ -127,15 +127,17 @@ class OrderStore {
     if (!_loaded) await loadAll();
   }
 
-  /// Writes a newly placed order and adds the server-confirmed row
-  /// (with its generated id and timestamp) to the top of the list.
+  /// Writes a newly placed order. Deliberately does NOT chain `.select()`
+  /// after the insert: PostgREST needs a SELECT-RLS pass to return the
+  /// inserted row, and the customer placing the order (anon role) has no
+  /// SELECT policy on `orders` on purpose — letting anon read rows back
+  /// would let any shopper page through every other customer's name,
+  /// phone, and address. The generated `id`/`created_at` aren't needed by
+  /// the checkout flow, so we just add the locally-built order (the admin
+  /// dashboard gets the real row, id included, via its own `loadAll()`).
   static Future<void> add(Order order) async {
-    final row = await SupabaseConfig.client
-        .from('orders')
-        .insert(order.toMap())
-        .select()
-        .single();
-    orders.value = [Order.fromMap(row), ...orders.value];
+    await SupabaseConfig.client.from('orders').insert(order.toMap());
+    orders.value = [order, ...orders.value];
   }
 
   /// Flips (or explicitly sets) the completed state of the order with
