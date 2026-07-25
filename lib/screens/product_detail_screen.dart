@@ -289,22 +289,8 @@ class _Details extends StatelessWidget {
     final textColor = isDark ? AppColors.cream : AppColors.espressoDeep;
     final mutedColor = textColor.withOpacity(0.68);
 
-    final cardColor = isDark ? AppColors.espresso : AppColors.surfaceCream;
-
     return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.cardBorder),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.espressoDeep.withOpacity(0.16),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

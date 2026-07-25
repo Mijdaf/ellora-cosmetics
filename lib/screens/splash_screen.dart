@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import '../services/supabase_config.dart';
 import '../theme/app_theme.dart';
 import '../widgets/animated_backdrop.dart';
+import 'admin_gate_screen.dart';
 import 'home_screen.dart';
 
 /// First thing shoppers see: the Nafas logo on a branded espresso
@@ -35,12 +37,23 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
     // as long as the splash is on screen.
     _dotsController = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200))..repeat();
 
-    Future.delayed(_splashDuration, () {
+    Future.delayed(_splashDuration, () async {
+      if (!mounted) return;
+      // If the browser tab got reloaded (e.g. the OS discarded a
+      // backgrounded tab to save memory/battery) while the admin was on
+      // the dashboard, the app boots fresh from here. Without this check
+      // it would always land on the public storefront, which looked like
+      // "the dashboard kicks me out to the site by itself". Supabase
+      // persists the session in the browser, so if one is still active
+      // we know it's the admin coming back — send them straight to the
+      // dashboard instead.
+      await SupabaseConfig.ready;
+      final isAdminSession = SupabaseConfig.isLoggedIn;
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
           transitionDuration: const Duration(milliseconds: 500),
-          pageBuilder: (_, __, ___) => const HomeScreen(),
+          pageBuilder: (_, __, ___) => isAdminSession ? const AdminGateScreen() : const HomeScreen(),
           transitionsBuilder: (_, animation, __, child) => FadeTransition(opacity: animation, child: child),
         ),
       );

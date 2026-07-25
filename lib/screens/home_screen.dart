@@ -400,7 +400,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       crossAxisCount: cols,
                                       crossAxisSpacing: spacing,
                                       mainAxisSpacing: spacing,
-                                      childAspectRatio: 0.66,
+                                      childAspectRatio: 0.56,
                                     ),
                                     itemBuilder: (context, i) => _StaggeredEntrance(
                                       index: i,
