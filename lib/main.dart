@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_web_plugins/url_strategy.dart';
 import 'theme/app_theme.dart';
 import 'services/app_language.dart';
 import 'screens/splash_screen.dart';
@@ -8,13 +7,13 @@ import 'services/supabase_config.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  // Without this, Flutter web only recognizes routes after a '#' (e.g.
-  // yoursite.com/#/admin). Typing or bookmarking a plain yoursite.com/admin
-  // (no '#') then resolves to '/' instead — which loads the splash screen,
-  // and its fixed 5s timer then pushes HomeScreen next, looking exactly
-  // like "the dashboard kicks me back to the site 5 seconds after I open
-  // it." This makes '/admin' (no '#') work the same as '/#/admin'.
-  usePathUrlStrategy();
+  // Deliberately NOT calling usePathUrlStrategy() here. That makes a plain
+  // yoursite.com/admin (no '#') work locally, but on a static host with no
+  // server-side rewrites — GitHub Pages, in particular — a direct request
+  // to /admin has no matching file on the server and 404s before Flutter
+  // ever loads. Hash-based routing (the default) always works everywhere
+  // with zero server config, because the '#/admin' part never gets sent
+  // to the server at all — the server only ever sees a request for '/'.
   // Poppins (English) and Cairo (Arabic) are both bundled locally
   // (assets/fonts/) and referenced via fontFamily everywhere, so first
   // paint never waits on a font network request at all.
@@ -53,8 +52,8 @@ class NafasApp extends StatelessWidget {
         initialRoute: WidgetsBinding.instance.platformDispatcher.defaultRouteName,
         // The admin dashboard has no link in the storefront's nav bar on
         // purpose — shoppers shouldn't stumble into it. It's reached
-        // directly by URL instead: yoursite.com/admin (thanks to
-        // usePathUrlStrategy() above — no '#' needed).
+        // directly by URL instead: yoursite.com/#/admin (the '#' is
+        // required — see the note in main() above).
         routes: {
           '/': (context) => const SplashScreen(),
           '/admin': (context) => const AdminGateScreen(),
