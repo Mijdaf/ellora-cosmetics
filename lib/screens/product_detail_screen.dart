@@ -569,17 +569,10 @@ class _AddToCartButton extends StatelessWidget {
                           style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15.5, color: AppColors.espressoDeep)),
                     ],
                   )
-                : Row(
+                : Text(
+                    S.t('add_to_cart', isArabic),
                     key: const ValueKey('add'),
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.shopping_bag_outlined, size: 19, color: AppColors.espressoDeep),
-                      const SizedBox(width: 8),
-                      Text(
-                        '${S.t('add', isArabic)} · ${formatEGP(total)}',
-                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15.5, color: AppColors.espressoDeep),
-                      ),
-                    ],
+                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15.5, color: AppColors.espressoDeep),
                   ),
           ),
         ),

@@ -105,6 +105,7 @@ class S {
     // Product detail
     'added_to_cart': 'Added to cart',
     'add': 'Add',
+    'add_to_cart': 'Add to cart',
     'ingredients': 'INGREDIENTS',
   };
 
@@ -185,6 +186,7 @@ class S {
     // Product detail
     'added_to_cart': 'أُضيف إلى السلة',
     'add': 'إضافة',
+    'add_to_cart': 'أضف إلى السلة',
     'ingredients': 'المكونات',
   };
 

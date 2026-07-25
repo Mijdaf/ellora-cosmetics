@@ -368,7 +368,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ? 4
                                   : constraints.maxWidth > 800
                                       ? 3
-                                      : constraints.maxWidth > 340
+                                      : constraints.maxWidth > 260
                                           ? 2
                                           : 1;
                               final spacing = constraints.maxWidth > 520 ? 24.0 : 14.0;
