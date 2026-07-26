@@ -26,6 +26,16 @@ class _AuroraGlowState extends State<AuroraGlow> with SingleTickerProviderStateM
       AnimationController(vsync: this, duration: const Duration(seconds: 30))..repeat();
   final List<_AuroraParticle> _particles = List.generate(8, (i) => _AuroraParticle.random(i));
 
+  // This drifts over a full 30s loop, so redrawing it on every single
+  // vsync tick (60/sec) buys nothing visible — the eye can't tell 60fps
+  // from 30fps on motion this slow. But each redraw here re-shades 4
+  // gradients through a Gaussian blur across the whole scrollable height,
+  // which is real, repeated GPU/CPU cost. Reusing the previous frame's
+  // widget on every other tick halves that cost with an identical result
+  // on screen.
+  int _tick = 0;
+  Widget? _lastFrame;
+
   @override
   void dispose() {
     _controller.dispose();
@@ -44,7 +54,9 @@ class _AuroraGlowState extends State<AuroraGlow> with SingleTickerProviderStateM
         return AnimatedBuilder(
           animation: _controller,
           builder: (context, _) {
-            return CustomPaint(
+            _tick++;
+            if (_tick.isOdd && _lastFrame != null) return _lastFrame!;
+            _lastFrame = CustomPaint(
               size: Size(constraints.maxWidth, height),
               painter: _AuroraPainter(
                 t: _controller.value,
@@ -55,6 +67,7 @@ class _AuroraGlowState extends State<AuroraGlow> with SingleTickerProviderStateM
                 particles: _particles,
               ),
             );
+            return _lastFrame!;
           },
         );
       },
@@ -205,6 +218,13 @@ class _PageFloatingTokensState extends State<PageFloatingTokens> with SingleTick
 
   static const _tokens = ['🥐', '🍞', '🥖', '🥞', '🍰', '🧁', '🍩', '🥯', '🍪', '🥨'];
 
+  // Same reasoning as AuroraGlow: a 14s loop doesn't need 60 rebuilds a
+  // second to look smooth, so every other tick reuses the prior frame's
+  // Stack instead of rebuilding all 10 Positioned/Transform/Opacity
+  // widgets again — half the layout+paint work, same result on screen.
+  int _tick = 0;
+  Widget? _lastFrame;
+
   @override
   void dispose() {
     _controller.dispose();
@@ -227,6 +247,8 @@ class _PageFloatingTokensState extends State<PageFloatingTokens> with SingleTick
         return AnimatedBuilder(
           animation: _controller,
           builder: (context, _) {
+            _tick++;
+            if (_tick.isOdd && _lastFrame != null) return _lastFrame!;
             final children = <Widget>[
               for (int i = 0; i < count; i++)
                 Builder(builder: (context) {
@@ -247,7 +269,8 @@ class _PageFloatingTokensState extends State<PageFloatingTokens> with SingleTick
                   );
                 }),
             ];
-            return Stack(children: children);
+            _lastFrame = Stack(children: children);
+            return _lastFrame!;
           },
         );
       },

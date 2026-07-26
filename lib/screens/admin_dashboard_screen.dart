@@ -160,53 +160,61 @@ class _DashboardTabsState extends State<_DashboardTabs> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            _TabIconButton(
-              icon: Icons.receipt_long_rounded,
-              label: 'Orders',
-              badgeCount: pendingCount,
-              isDark: widget.isDark,
-              selected: _selected == _DashboardSection.orders,
-              onTap: () => setState(() => _selected = _DashboardSection.orders),
-            ),
-            const SizedBox(width: 12),
-            _TabIconButton(
-              icon: Icons.view_carousel_rounded,
-              label: 'Banners',
-              badgeCount: 0,
-              isDark: widget.isDark,
-              selected: _selected == _DashboardSection.banners,
-              onTap: () => setState(() => _selected = _DashboardSection.banners),
-            ),
-            const SizedBox(width: 12),
-            _TabIconButton(
-              icon: Icons.sell_outlined,
-              label: 'Categories',
-              badgeCount: 0,
-              isDark: widget.isDark,
-              selected: _selected == _DashboardSection.categories,
-              onTap: () => setState(() => _selected = _DashboardSection.categories),
-            ),
-            const SizedBox(width: 12),
-            _TabIconButton(
-              icon: Icons.bakery_dining_rounded,
-              label: 'Products',
-              badgeCount: 0,
-              isDark: widget.isDark,
-              selected: _selected == _DashboardSection.products,
-              onTap: () => setState(() => _selected = _DashboardSection.products),
-            ),
-            const SizedBox(width: 12),
-            _TabIconButton(
-              icon: Icons.settings_rounded,
-              label: 'Settings',
-              badgeCount: 0,
-              isDark: widget.isDark,
-              selected: _selected == _DashboardSection.settings,
-              onTap: () => setState(() => _selected = _DashboardSection.settings),
-            ),
-          ],
+        // Wrapped in a horizontal scroller: on phones the 5 tabs (Orders,
+        // Banners, Categories, Products, Settings) are wider than the
+        // screen, so without this the last one or two got clipped off the
+        // right edge with no way to reach them. Now the row just scrolls.
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          child: Row(
+            children: [
+              _TabIconButton(
+                icon: Icons.receipt_long_rounded,
+                label: 'Orders',
+                badgeCount: pendingCount,
+                isDark: widget.isDark,
+                selected: _selected == _DashboardSection.orders,
+                onTap: () => setState(() => _selected = _DashboardSection.orders),
+              ),
+              const SizedBox(width: 12),
+              _TabIconButton(
+                icon: Icons.view_carousel_rounded,
+                label: 'Banners',
+                badgeCount: 0,
+                isDark: widget.isDark,
+                selected: _selected == _DashboardSection.banners,
+                onTap: () => setState(() => _selected = _DashboardSection.banners),
+              ),
+              const SizedBox(width: 12),
+              _TabIconButton(
+                icon: Icons.sell_outlined,
+                label: 'Categories',
+                badgeCount: 0,
+                isDark: widget.isDark,
+                selected: _selected == _DashboardSection.categories,
+                onTap: () => setState(() => _selected = _DashboardSection.categories),
+              ),
+              const SizedBox(width: 12),
+              _TabIconButton(
+                icon: Icons.bakery_dining_rounded,
+                label: 'Products',
+                badgeCount: 0,
+                isDark: widget.isDark,
+                selected: _selected == _DashboardSection.products,
+                onTap: () => setState(() => _selected = _DashboardSection.products),
+              ),
+              const SizedBox(width: 12),
+              _TabIconButton(
+                icon: Icons.settings_rounded,
+                label: 'Settings',
+                badgeCount: 0,
+                isDark: widget.isDark,
+                selected: _selected == _DashboardSection.settings,
+                onTap: () => setState(() => _selected = _DashboardSection.settings),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 24),
         switch (_selected) {
@@ -346,13 +354,22 @@ class _TopBar extends StatelessWidget {
             children: [
               Text('OVERVIEW', style: AppTheme.eyebrow()),
               const SizedBox(height: 2),
-              Text(
-                'Dashboard',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w600,
-                  color: titleColor,
-                  fontFamily: 'Poppins',
+              // FittedBox + maxLines:1 shrinks the font just enough to keep
+              // "Dashboard" on one line on narrow phones, instead of Text
+              // wrapping it mid-word ("Dashboar" / "d") when the back
+              // button + Sign out button squeeze this Expanded down.
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Dashboard',
+                  maxLines: 1,
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w600,
+                    color: titleColor,
+                    fontFamily: 'Poppins',
+                  ),
                 ),
               ),
             ],
@@ -1124,9 +1141,16 @@ class _ProductManager extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Manage Products', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textColor)),
+              Expanded(
+                child: Text(
+                  'Manage Products',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textColor),
+                ),
+              ),
+              const SizedBox(width: 12),
               ElevatedButton.icon(
                 onPressed: () => _openProductForm(context),
                 icon: const Icon(Icons.add_rounded, size: 18),

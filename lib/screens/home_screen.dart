@@ -34,10 +34,18 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<CartItem> _cartItems = [];
   String? _filter;
   String _searchQuery = '';
-  double _scrollProgress = 0;
+  // These two used to be plain State fields updated via setState from the
+  // scroll listener below — which meant every scroll tick rebuilt this
+  // entire screen (hero, banners, the whole product grid, story, footer —
+  // everything), not just the nav bar that actually needed the new value.
+  // That full-tree rebuild racing the scroll gesture is what made scrolling
+  // feel heavy. Moving them to ValueNotifiers lets only the small
+  // ValueListenableBuilder around NavBar/NafasDrawer (below) rebuild on
+  // scroll, with zero change to what either widget actually renders.
+  final ValueNotifier<double> _scrollProgress = ValueNotifier(0);
   // -1 = neither section in view (e.g. still on the hero); 0 = Menu, 1 =
   // About — drives the nav bar's real "active" link, not just hover.
-  int _activeNavIndex = -1;
+  final ValueNotifier<int> _activeNavIndex = ValueNotifier(-1);
   bool _isDrawerOpen = false;
 
   int get _cartCount => _cartItems.fold(0, (sum, item) => sum + item.quantity);
@@ -122,7 +130,7 @@ class _HomeScreenState extends State<HomeScreen> {
     StoreSettingsStore.ensureLoaded();
     _scrollController.addListener(() {
       final p = (_scrollController.offset / 140).clamp(0.0, 1.0);
-      if (p != _scrollProgress) setState(() => _scrollProgress = p);
+      if (p != _scrollProgress.value) _scrollProgress.value = p;
       _updateActiveNavSection();
     });
   }
@@ -130,6 +138,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _scrollProgress.dispose();
+    _activeNavIndex.dispose();
     super.dispose();
   }
 
@@ -159,7 +169,7 @@ class _HomeScreenState extends State<HomeScreen> {
         active = idx;
       }
     });
-    if (active != _activeNavIndex) setState(() => _activeNavIndex = active);
+    if (active != _activeNavIndex.value) _activeNavIndex.value = active;
   }
 
   void _scrollToMenu() => _scrollToKey(_menuKey);
@@ -219,26 +229,42 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: isDark ? AppColors.espressoDark : AppColors.surfaceCream,
           extendBodyBehindAppBar: true,
-          appBar: NavBar(
-            cartCount: _cartCount,
-            cartItems: _cartItems,
-            scrollProgress: _scrollProgress,
-            activeNavIndex: _activeNavIndex,
-            isDrawerOpen: _isDrawerOpen,
-            onNavLinkTap: [_scrollToMenu, _scrollToAbout],
-            onCartBrowseMenu: _scrollToMenu,
-            onViewCart: _openCart,
+          // PreferredSize keeps NavBar's own fixed height (96) intact for
+          // the Scaffold, while the ValueListenableBuilders underneath mean
+          // only this small subtree rebuilds as the scroll notifiers change
+          // — the hero/grid/footer below never gets touched by scrolling.
+          appBar: PreferredSize(
+            preferredSize: const Size.fromHeight(96),
+            child: ValueListenableBuilder<double>(
+              valueListenable: _scrollProgress,
+              builder: (context, scrollProgress, __) => ValueListenableBuilder<int>(
+                valueListenable: _activeNavIndex,
+                builder: (context, activeNavIndex, ___) => NavBar(
+                  cartCount: _cartCount,
+                  cartItems: _cartItems,
+                  scrollProgress: scrollProgress,
+                  activeNavIndex: activeNavIndex,
+                  isDrawerOpen: _isDrawerOpen,
+                  onNavLinkTap: [_scrollToMenu, _scrollToAbout],
+                  onCartBrowseMenu: _scrollToMenu,
+                  onViewCart: _openCart,
+                ),
+              ),
+            ),
           ),
           // Phone navigation drawer — the hamburger in NavBar opens this
           // (Scaffold.of(context).openDrawer()) instead of a small
           // dropdown once the screen is narrow.
-          drawer: NafasDrawer(
-            cartCount: _cartCount,
-            activeNavIndex: _activeNavIndex,
-            isDark: isDark,
-            onNavLinkTap: [_scrollToMenu, _scrollToAbout],
-            onBrowseMenu: _scrollToMenu,
-            onViewCart: _openCart,
+          drawer: ValueListenableBuilder<int>(
+            valueListenable: _activeNavIndex,
+            builder: (context, activeNavIndex, __) => NafasDrawer(
+              cartCount: _cartCount,
+              activeNavIndex: activeNavIndex,
+              isDark: isDark,
+              onNavLinkTap: [_scrollToMenu, _scrollToAbout],
+              onBrowseMenu: _scrollToMenu,
+              onViewCart: _openCart,
+            ),
           ),
           // Fires on every close path (swipe, tap-outside, back button, or
           // a link tap inside the drawer that calls Navigator.pop), so the
@@ -360,6 +386,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               categories: categories,
                               selected: _filter,
                               isArabic: isArabic,
+                              isNarrow: isNarrow,
                               onChanged: (c) => setState(() => _filter = c),
                             ),
                             const SizedBox(height: 40),
@@ -805,11 +832,13 @@ class _CategoryFilters extends StatelessWidget {
   final List<Category> categories;
   final String? selected;
   final bool isArabic;
+  final bool isNarrow;
   final ValueChanged<String?> onChanged;
   const _CategoryFilters({
     required this.categories,
     required this.selected,
     required this.isArabic,
+    required this.isNarrow,
     required this.onChanged,
   });
 
@@ -820,18 +849,42 @@ class _CategoryFilters extends StatelessWidget {
       (S.t('all', isArabic), null),
       for (final c in categories) (categoryDisplayName(c.name, isArabic), c.name),
     ];
+    final chips = entries.map((e) {
+      final isSelected = selected == e.$2;
+      return _HoverLiftChip(
+        isSelected: isSelected,
+        label: e.$1,
+        isArabic: isArabic,
+        onTap: () => onChanged(e.$2),
+      );
+    }).toList();
+
+    // On phones, a Wrap stacks these into centered rows of uneven width
+    // (e.g. "All / Cookies" then "Cinnabon / Cakes" left dangling below) —
+    // once there are more than a couple of categories that reads messily
+    // and eats vertical space. A single horizontally-scrolling row keeps
+    // every chip the same size and reachable with one swipe, the same
+    // pattern already used for the dashboard's tabs.
+    if (isNarrow) {
+      return SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        child: Row(
+          children: [
+            for (int i = 0; i < chips.length; i++) ...[
+              if (i > 0) const SizedBox(width: 10),
+              chips[i],
+            ],
+          ],
+        ),
+      );
+    }
+
     return Wrap(
       spacing: 10,
       alignment: WrapAlignment.center,
-      children: entries.map((e) {
-        final isSelected = selected == e.$2;
-        return _HoverLiftChip(
-          isSelected: isSelected,
-          label: e.$1,
-          isArabic: isArabic,
-          onTap: () => onChanged(e.$2),
-        );
-      }).toList(),
+      children: chips,
     );
   }
 }
