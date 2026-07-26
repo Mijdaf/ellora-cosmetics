@@ -5,6 +5,7 @@ import '../services/app_language.dart';
 import '../theme/app_theme.dart';
 import '../utils/text_dir.dart';
 import '../widgets/animated_background.dart';
+import '../widgets/heart_button.dart';
 
 /// Full-page product detail screen — pushed as its own route instead of a
 /// modal dialog, so the product showcase gets a lot more room to breathe:
@@ -68,7 +69,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _TopBar(isDark: isDark),
+                          _TopBar(isDark: isDark, product: p),
                           const SizedBox(height: 28),
                           isNarrow
                               ? Column(
@@ -129,12 +130,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
 class _TopBar extends StatelessWidget {
   final bool isDark;
-  const _TopBar({required this.isDark});
+  final Product product;
+  const _TopBar({required this.isDark, required this.product});
 
   @override
   Widget build(BuildContext context) {
     final iconColor = isDark ? AppColors.cream : AppColors.espressoDeep;
     return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Material(
           color: (isDark ? Colors.white : AppColors.espressoDeep).withOpacity(0.08),
@@ -148,6 +151,7 @@ class _TopBar extends StatelessWidget {
             ),
           ),
         ),
+        HeartButton(product: product, size: 40),
       ],
     );
   }

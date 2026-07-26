@@ -4,6 +4,7 @@ import '../screens/product_detail_screen.dart';
 import '../theme/app_theme.dart';
 import '../utils/text_dir.dart';
 import 'fly_to_cart.dart';
+import 'heart_button.dart';
 
 /// A product card with a subtle hover highlight (border/shadow) and a
 /// one-time entrance animation. Used to tilt toward the cursor on hover,
@@ -103,22 +104,32 @@ class _ProductCard3DState extends State<ProductCard3D> with SingleTickerProvider
                 children: [
                   // Image fills the card edge-to-edge, no padding/border around it.
                   Expanded(
-                    child: (widget.product.imageUrl != null || widget.product.imageBytes != null)
-                        ? SizedBox(
-                            width: double.infinity,
-                            height: double.infinity,
-                            child: widget.product.imageUrl != null
-                                ? Image.network(
-                                    widget.product.imageUrl!,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (_, __, ___) => _ImagePlaceholder(emoji: widget.product.emoji),
-                                  )
-                                : Image.memory(
-                                    widget.product.imageBytes!,
-                                    fit: BoxFit.cover,
-                                  ),
-                          )
-                        : _ImagePlaceholder(emoji: widget.product.emoji),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        (widget.product.imageUrl != null || widget.product.imageBytes != null)
+                            ? SizedBox(
+                                width: double.infinity,
+                                height: double.infinity,
+                                child: widget.product.imageUrl != null
+                                    ? Image.network(
+                                        widget.product.imageUrl!,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) => _ImagePlaceholder(emoji: widget.product.emoji),
+                                      )
+                                    : Image.memory(
+                                        widget.product.imageBytes!,
+                                        fit: BoxFit.cover,
+                                      ),
+                              )
+                            : _ImagePlaceholder(emoji: widget.product.emoji),
+                        Positioned(
+                          top: 10,
+                          right: 10,
+                          child: HeartButton(product: widget.product),
+                        ),
+                      ],
+                    ),
                   ),
                   // Everything else keeps its own padding, separate from the image.
                   Padding(

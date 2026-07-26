@@ -101,6 +101,10 @@ class S {
     'send_whatsapp_body':
         'We\'ve opened WhatsApp with your order details filled in — just tap Send to confirm your order with us.',
     'got_it': 'Got it',
+    'instapay_paid_title': 'Finished paying?',
+    'instapay_paid_body':
+        'We just opened InstaPay in another tab for your payment. Once you\'re done, tap the button below to send us your order details on WhatsApp.',
+    'send_via_whatsapp': 'Send via WhatsApp',
 
     // Product detail
     'added_to_cart': 'Added to cart',
@@ -182,6 +186,9 @@ class S {
     'send_whatsapp_title': 'خطوة أخيرة',
     'send_whatsapp_body': 'فتحنا لك واتساب برسالة جاهزة بتفاصيل طلبك — اضغط إرسال لتأكيد طلبك معنا.',
     'got_it': 'تمام',
+    'instapay_paid_title': 'خلصت الدفع؟',
+    'instapay_paid_body': 'فتحنالك إنستاباي في تاب تاني عشان تدفع. لما تخلص، دوس على الزرار تحت عشان تبعتلنا تفاصيل طلبك على واتساب.',
+    'send_via_whatsapp': 'إرسال عبر واتساب',
 
     // Product detail
     'added_to_cart': 'أُضيف إلى السلة',

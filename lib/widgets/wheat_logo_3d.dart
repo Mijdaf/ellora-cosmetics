@@ -4,8 +4,7 @@ import '../theme/app_theme.dart';
 
 /// Displays your real uploaded logo (assets/images/logo.jpg), floating and
 /// tilting in 3D space via a perspective transform matrix — reacts to both
-/// an idle auto-sway and the cursor position, plus a soft breathing glow
-/// behind it that matches the wheat-gold accent color.
+/// an idle auto-sway and the cursor position.
 class WheatLogo3D extends StatefulWidget {
   final double size;
   const WheatLogo3D({super.key, this.size = 220});
@@ -52,22 +51,11 @@ class _WheatLogo3DState extends State<WheatLogo3D> with SingleTickerProviderStat
           final rotY = autoSwing + (_pointer.dx * 0.35);
           final rotX = _pointer.dy * -0.22;
           final floatY = math.sin(_controller.value * 2 * math.pi) * 8;
-          final glow = 0.14 + math.sin(_controller.value * 2 * math.pi) * 0.06;
 
           return Transform.translate(
             offset: Offset(0, floatY),
             child: Container(
               padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.wheatGold.withOpacity(glow),
-                    blurRadius: 32,
-                    spreadRadius: 1,
-                  ),
-                ],
-              ),
               child: Transform(
                 alignment: Alignment.center,
                 transform: Matrix4.identity()

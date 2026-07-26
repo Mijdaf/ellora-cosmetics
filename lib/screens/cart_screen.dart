@@ -591,25 +591,46 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
     );
     try {
       await OrderStore.add(order);
-      // Best-effort: opens a wa.me link with the order details pre-filled
-      // so the customer just has to tap send — no API/token involved. Never
-      // blocks or fails the checkout if it can't open.
-      unawaited(WhatsAppNotify.sendOrder(order));
       if (!mounted) return;
       final navigator = Navigator.of(context);
       final messenger = ScaffoldMessenger.of(context); // grabbed before popping, so it survives the dialog closing
+      final cartContext = navigator.context;
       navigator.pop(); // close the checkout dialog itself
       widget.onOrderPlaced();
       messenger.showSnackBar(
         SnackBar(content: Text(S.t('order_placed', widget.isArabic))),
       );
-      // Tell the customer WhatsApp is already open with their order
-      // details filled in, so they know to tap Send there to confirm.
-      final cartContext = navigator.context;
-      showDialog(
-        context: cartContext,
-        builder: (_) => _SendWhatsAppReminderDialog(isDark: widget.isDark, isArabic: widget.isArabic),
-      );
+
+      if (_paymentMethod == 'instapay') {
+        // Send the customer to InstaPay to actually pay first. Auto-opening
+        // WhatsApp right now (before they've paid) would just be noise, so
+        // instead show a dialog with a "Send via WhatsApp" button they tap
+        // themselves once they're back from paying.
+        final link = StoreSettingsStore.settings.value.instapayLink;
+        if (link.isNotEmpty) {
+          try {
+            await launchUrl(Uri.parse(link), mode: LaunchMode.externalApplication);
+          } catch (_) {
+            // Non-fatal — the order is already saved regardless.
+          }
+        }
+        if (!cartContext.mounted) return;
+        showDialog(
+          context: cartContext,
+          builder: (_) => _InstapayPaidDialog(order: order, isDark: widget.isDark, isArabic: widget.isArabic),
+        );
+      } else {
+        // Best-effort: opens a wa.me link with the order details pre-filled
+        // so the customer just has to tap send — no API/token involved.
+        // Never blocks or fails the checkout if it can't open.
+        unawaited(WhatsAppNotify.sendOrder(order));
+        // Tell the customer WhatsApp is already open with their order
+        // details filled in, so they know to tap Send there to confirm.
+        showDialog(
+          context: cartContext,
+          builder: (_) => _SendWhatsAppReminderDialog(isDark: widget.isDark, isArabic: widget.isArabic),
+        );
+      }
     } catch (e) {
       if (mounted) {
         setState(() => _placing = false);
@@ -778,29 +799,94 @@ class _PayNowLink extends StatelessWidget {
             color: AppColors.wheatGold.withOpacity(0.12),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Row(
+          // The message and the action button used to sit in one Row. Once
+          // the button's own label ("Send via Vodafone Cash" / "Pay via
+          // InstaPay") claimed its width first, the Expanded message text
+          // was left with almost no room — down to a sliver a single
+          // character wide, so it wrapped one letter per line instead of
+          // reading as a sentence. Stacking them (message on top, button
+          // on its own line below) gives each the full container width, so
+          // both wrap and align normally.
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(isInstapay ? Icons.link_rounded : Icons.copy_rounded, size: 16, color: textColor.withOpacity(0.8)),
-              const SizedBox(width: 8),
-              Expanded(
-                child: isInstapay
-                    ? Text(S.t('pay_via_instapay', isArabic), style: TextStyle(fontSize: 12.5, color: textColor))
-                    : Text(
-                        S.t('vodafone_cash_send_to', isArabic).replaceAll('%s', number),
-                        style: TextStyle(fontSize: 12.5, color: textColor),
-                      ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(isInstapay ? Icons.link_rounded : Icons.copy_rounded, size: 16, color: textColor.withOpacity(0.8)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: isInstapay
+                        ? Text(S.t('pay_via_instapay', isArabic), style: TextStyle(fontSize: 12.5, color: textColor))
+                        : Text(
+                            S.t('vodafone_cash_send_to', isArabic).replaceAll('%s', number),
+                            style: TextStyle(fontSize: 12.5, color: textColor),
+                          ),
+                  ),
+                ],
               ),
-              TextButton(
-                onPressed: () => isInstapay ? _openInstapay(context, link) : _copyVodafoneNumber(context, number),
-                child: Text(
-                  isInstapay ? S.t('pay_via_instapay', isArabic) : S.t('pay_via_vodafone_cash', isArabic),
-                  style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700),
+              const SizedBox(height: 8),
+              Align(
+                alignment: isArabic ? Alignment.centerRight : Alignment.centerLeft,
+                child: TextButton(
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  onPressed: () => isInstapay ? _openInstapay(context, link) : _copyVodafoneNumber(context, number),
+                  child: Text(
+                    isInstapay ? S.t('pay_via_instapay', isArabic) : S.t('pay_via_vodafone_cash', isArabic),
+                    style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700),
+                  ),
                 ),
               ),
             ],
           ),
         );
       },
+    );
+  }
+}
+
+/// Shown after a customer checks out with InstaPay: we've just sent them to
+/// the owner's InstaPay link in another tab to actually pay. Unlike the
+/// other payment methods, WhatsApp isn't auto-opened here — that would fire
+/// before they've paid — so this gives them a button to send the order
+/// details over WhatsApp themselves once they're back.
+class _InstapayPaidDialog extends StatelessWidget {
+  final Order order;
+  final bool isDark;
+  final bool isArabic;
+  const _InstapayPaidDialog({required this.order, required this.isDark, required this.isArabic});
+
+  @override
+  Widget build(BuildContext context) {
+    final textColor = isDark ? AppColors.cream : AppColors.espressoDeep;
+    return AlertDialog(
+      backgroundColor: isDark ? AppColors.espressoDark : AppColors.cream,
+      icon: const Icon(Icons.check_circle_rounded, color: AppColors.wheatGoldDark, size: 32),
+      title: Text(
+        S.t('instapay_paid_title', isArabic),
+        style: TextStyle(fontWeight: FontWeight.w700, color: textColor),
+        textAlign: TextAlign.center,
+      ),
+      content: Text(
+        S.t('instapay_paid_body', isArabic),
+        style: TextStyle(fontSize: 13.5, color: textColor.withOpacity(0.85)),
+        textAlign: TextAlign.center,
+      ),
+      actionsAlignment: MainAxisAlignment.center,
+      actions: [
+        ElevatedButton.icon(
+          onPressed: () {
+            unawaited(WhatsAppNotify.sendOrder(order));
+            Navigator.of(context).pop();
+          },
+          icon: const Icon(Icons.chat_rounded, size: 18),
+          label: Text(S.t('send_via_whatsapp', isArabic)),
+        ),
+      ],
     );
   }
 }
