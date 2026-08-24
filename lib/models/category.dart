@@ -2,8 +2,8 @@ import 'package:flutter/foundation.dart';
 
 import '../services/supabase_config.dart';
 
-/// Best-effort Arabic label for a handful of very common bakery category
-/// names, so a category the owner typed in English (e.g. "Cakes") still
+/// Best-effort Arabic label for a handful of very common cosmetics category
+/// names, so a category the owner typed in English (e.g. "Skincare") still
 /// reads naturally instead of sitting in Latin script inside an otherwise
 /// fully-Arabic storefront. This only changes what's *displayed* — the
 /// stored category name (used for matching products) is untouched, and
@@ -11,30 +11,36 @@ import '../services/supabase_config.dart';
 String categoryDisplayName(String name, bool isArabic) {
   if (!isArabic) return name;
   const known = {
-    'cakes': 'كيك',
-    'cake': 'كيك',
-    'bread': 'خبز',
-    'breads': 'خبز',
-    'pastries': 'معجنات',
-    'pastry': 'معجنات',
-    'croissants': 'كرواسون',
-    'croissant': 'كرواسون',
-    'coffee': 'قهوة',
-    'cookies': 'كوكيز',
-    'cookie': 'كوكيز',
-    'donuts': 'دوناتس',
-    'donut': 'دوناتس',
-    'cupcakes': 'كب كيك',
-    'cupcake': 'كب كيك',
-    'sweets': 'حلويات',
-    'desserts': 'حلويات',
-    'drinks': 'مشروبات',
-    'beverages': 'مشروبات',
+    'makeup': 'مكياج',
+    'skincare': 'العناية بالبشرة',
+    'skin care': 'العناية بالبشرة',
+    'haircare': 'العناية بالشعر',
+    'hair care': 'العناية بالشعر',
+    'fragrance': 'عطور',
+    'fragrances': 'عطور',
+    'perfume': 'عطور',
+    'perfumes': 'عطور',
+    'lips': 'شفاه',
+    'lipstick': 'أحمر شفاه',
+    'lipsticks': 'أحمر شفاه',
+    'eyes': 'عيون',
+    'eyeshadow': 'ظلال عيون',
+    'face': 'بشرة',
+    'foundation': 'كريم أساس',
+    'blush': 'أحمر خدود',
+    'brushes': 'فرش مكياج',
+    'tools': 'أدوات مكياج',
+    'nails': 'أظافر',
+    'body care': 'العناية بالجسم',
+    'bodycare': 'العناية بالجسم',
+    'sets': 'مجموعات',
+    'gift sets': 'مجموعات هدايا',
+    'accessories': 'إكسسوارات',
   };
   return known[name.trim().toLowerCase()] ?? name;
 }
 
-/// A single product category (e.g. "Pastries", "Cakes"). Fully owner-managed
+/// A single product category (e.g. "Skincare", "Makeup"). Fully owner-managed
 /// from the admin dashboard — there is no fixed/hardcoded list baked into
 /// the app. Products store the category's `name` as free text, so renaming
 /// a category here does not automatically rename it on existing products.

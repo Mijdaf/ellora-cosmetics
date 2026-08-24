@@ -1,2 +1,2 @@
-Place your logo file here as "logo.png" (the wheat + نفس logo you uploaded).
-The app references it at: assets/images/logo.png
+This is the Ellora Cosmetics pink monogram logo (logo.jpg).
+Referenced across the app at: assets/images/logo.jpg

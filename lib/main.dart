@@ -14,7 +14,7 @@ void main() {
   // ever loads. Hash-based routing (the default) always works everywhere
   // with zero server config, because the '#/admin' part never gets sent
   // to the server at all — the server only ever sees a request for '/'.
-  // Poppins (English) and Cairo (Arabic) are both bundled locally
+  // Montserrat (English) and Cairo (Arabic) are both bundled locally
   // (assets/fonts/) and referenced via fontFamily everywhere, so first
   // paint never waits on a font network request at all.
   // Don't block the very first paint on a network round-trip: kick off
@@ -22,23 +22,23 @@ void main() {
   // immediately. Screens that actually need Supabase (admin, product
   // loads) await SupabaseConfig.ready internally.
   SupabaseConfig.init();
-  runApp(const NafasApp());
+  runApp(const ElloraApp());
 }
 
-class NafasApp extends StatelessWidget {
-  const NafasApp({super.key});
+class ElloraApp extends StatelessWidget {
+  const ElloraApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // The whole app's theme swaps between Poppins (English) and Cairo
+    // The whole app's theme swaps between Montserrat (English) and Cairo
     // (Arabic) based on the storefront's language notifier, so headline,
     // body, and label styles pulled from Theme.of(context).textTheme pick
     // up the right typeface automatically. The admin route pins its own
-    // fixed Poppins/English Theme regardless (see AdminGateScreen).
+    // fixed Montserrat/English Theme regardless (see AdminGateScreen).
     return ValueListenableBuilder<bool>(
       valueListenable: AppLanguage.isArabic,
       builder: (context, isArabic, _) => MaterialApp(
-        title: 'Nafas Bakery',
+        title: 'Ellora Cosmetics',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.themeFor(isArabic),
         // Read the URL the browser was actually pointed at instead of

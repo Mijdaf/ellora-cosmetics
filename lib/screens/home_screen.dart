@@ -12,7 +12,7 @@ import '../theme/app_theme.dart';
 import '../widgets/animated_background.dart';
 import '../widgets/hero_section.dart';
 import '../widgets/home_banner_slideshow.dart';
-import '../widgets/nafas_drawer.dart';
+import '../widgets/ellora_drawer.dart';
 import '../widgets/nav_bar.dart';
 import '../widgets/product_card_3d.dart';
 import '../widgets/scroll_reveal.dart';
@@ -40,7 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // everything), not just the nav bar that actually needed the new value.
   // That full-tree rebuild racing the scroll gesture is what made scrolling
   // feel heavy. Moving them to ValueNotifiers lets only the small
-  // ValueListenableBuilder around NavBar/NafasDrawer (below) rebuild on
+  // ValueListenableBuilder around NavBar/ElloraDrawer (below) rebuild on
   // scroll, with zero change to what either widget actually renders.
   final ValueNotifier<double> _scrollProgress = ValueNotifier(0);
   // -1 = neither section in view (e.g. still on the hero); 0 = Menu, 1 =
@@ -257,7 +257,7 @@ class _HomeScreenState extends State<HomeScreen> {
           // dropdown once the screen is narrow.
           drawer: ValueListenableBuilder<int>(
             valueListenable: _activeNavIndex,
-            builder: (context, activeNavIndex, __) => NafasDrawer(
+            builder: (context, activeNavIndex, __) => ElloraDrawer(
               cartCount: _cartCount,
               activeNavIndex: activeNavIndex,
               isDark: isDark,
@@ -274,7 +274,7 @@ class _HomeScreenState extends State<HomeScreen> {
             controller: _scrollController,
             child: Stack(
               children: [
-                // Ambient decorative layers (floating pastry tokens + the
+                // Ambient decorative layers (floating beauty-emoji tokens + the
                 // aurora glow) must be painted FIRST here so Stack renders
                 // them behind the real content below — Stack paints later
                 // children on top, and these were previously listed after
@@ -849,18 +849,21 @@ class _CategoryFilters extends StatelessWidget {
       (S.t('all', isArabic), null),
       for (final c in categories) (categoryDisplayName(c.name, isArabic), c.name),
     ];
-    final chips = entries.map((e) {
+    final chips = entries.asMap().entries.map((entry) {
+      final i = entry.key;
+      final e = entry.value;
       final isSelected = selected == e.$2;
       return _HoverLiftChip(
         isSelected: isSelected,
         label: e.$1,
         isArabic: isArabic,
+        accentColor: AppColors.pastelAccents[i % AppColors.pastelAccents.length],
         onTap: () => onChanged(e.$2),
       );
     }).toList();
 
     // On phones, a Wrap stacks these into centered rows of uneven width
-    // (e.g. "All / Cookies" then "Cinnabon / Cakes" left dangling below) —
+    // (e.g. "All / Makeup" then "Lipstick / Skincare" left dangling below) —
     // once there are more than a couple of categories that reads messily
     // and eats vertical space. A single horizontally-scrolling row keeps
     // every chip the same size and reachable with one swipe, the same
@@ -895,8 +898,15 @@ class _HoverLiftChip extends StatefulWidget {
   final bool isSelected;
   final String label;
   final bool isArabic;
+  final Color accentColor;
   final VoidCallback onTap;
-  const _HoverLiftChip({required this.isSelected, required this.label, required this.isArabic, required this.onTap});
+  const _HoverLiftChip({
+    required this.isSelected,
+    required this.label,
+    required this.isArabic,
+    required this.accentColor,
+    required this.onTap,
+  });
 
   @override
   State<_HoverLiftChip> createState() => _HoverLiftChipState();
@@ -920,8 +930,8 @@ class _HoverLiftChipState extends State<_HoverLiftChip> {
         curve: Curves.easeOut,
         transform: Matrix4.translationValues(0, _hover ? -3 : 0, 0),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.wheatGold : Colors.transparent,
-          border: Border.all(color: AppColors.wheatGold, width: 1.3),
+          color: isSelected ? AppColors.wheatGold : widget.accentColor,
+          border: Border.all(color: isSelected ? AppColors.wheatGold : widget.accentColor, width: 1.3),
           borderRadius: BorderRadius.circular(23),
           boxShadow: isSelected || _hover
               ? [
@@ -957,7 +967,7 @@ class _HoverLiftChipState extends State<_HoverLiftChip> {
                   ),
                   // Force a single line: IntrinsicWidth sizes this pill to
                   // the label's measured width, but if that measurement
-                  // ever falls a hair short (e.g. right after the Poppins
+                  // ever falls a hair short (e.g. right after the Montserrat
                   // web font swaps in for the fallback font), a wrapping
                   // Text will break mid-word ("Pastrie" / "s"). softWrap:
                   // false + maxLines: 1 guarantees the label always stays
@@ -1162,14 +1172,14 @@ class _FooterState extends State<_Footer> with TickerProviderStateMixin {
                                                   'assets/images/logo.jpg',
                                                   fit: BoxFit.cover,
                                                   errorBuilder: (_, __, ___) =>
-                                                      const Icon(Icons.eco, color: AppColors.wheatGold, size: 26),
+                                                      const Icon(Icons.spa, color: AppColors.wheatGold, size: 26),
                                                 ),
                                               ),
                                             ),
                                           ),
                                         ),
                                         const SizedBox(height: 12),
-                                        Text('Nafas', style: AppTheme.brandWordmark(isArabic: isArabic).copyWith(fontSize: 28, color: isDark ? AppColors.cream : AppColors.espressoDeep)),
+                                        Text('Ellora', style: AppTheme.brandWordmark(isArabic: isArabic).copyWith(fontSize: 28, color: isDark ? AppColors.cream : AppColors.espressoDeep)),
                                       ],
                                     )
                                   : Row(
@@ -1197,13 +1207,13 @@ class _FooterState extends State<_Footer> with TickerProviderStateMixin {
                                                 'assets/images/logo.jpg',
                                                 fit: BoxFit.cover,
                                                 errorBuilder: (_, __, ___) =>
-                                                    const Icon(Icons.eco, color: AppColors.wheatGold, size: 26),
+                                                    const Icon(Icons.spa, color: AppColors.wheatGold, size: 26),
                                               ),
                                             ),
                                           ),
                                         ),
                                         const SizedBox(width: 14),
-                                        Text('Nafas', style: AppTheme.brandWordmark(isArabic: isArabic).copyWith(fontSize: 28, color: isDark ? AppColors.cream : AppColors.espressoDeep)),
+                                        Text('Ellora', style: AppTheme.brandWordmark(isArabic: isArabic).copyWith(fontSize: 28, color: isDark ? AppColors.cream : AppColors.espressoDeep)),
                                       ],
                                     ),
                               const SizedBox(height: 10),
@@ -1479,7 +1489,7 @@ class _TickingWheatIconState extends State<_TickingWheatIcon> with SingleTickerP
         final angle = (_controller.value - 0.5) * 0.35;
         return Transform.rotate(angle: angle, child: child);
       },
-      child: const Icon(Icons.eco, size: 14, color: AppColors.wheatGold),
+      child: const Icon(Icons.spa, size: 14, color: AppColors.wheatGold),
     );
   }
 }

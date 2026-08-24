@@ -269,7 +269,7 @@ class _ImagePlaceholder extends StatelessWidget {
       color: AppColors.wheatGold.withOpacity(0.14),
       alignment: Alignment.center,
       child: emoji.trim().isEmpty
-          ? Icon(Icons.bakery_dining_outlined, size: 40, color: AppColors.wheatGoldDark.withOpacity(0.6))
+          ? Icon(Icons.face_retouching_natural_outlined, size: 40, color: AppColors.wheatGoldDark.withOpacity(0.6))
           : Text(emoji, style: const TextStyle(fontSize: 56)),
     );
   }

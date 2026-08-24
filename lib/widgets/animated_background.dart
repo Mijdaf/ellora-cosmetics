@@ -201,9 +201,9 @@ class _AuroraParticle {
   }
 }
 
-/// One shared field of faint floating pastry emoji, painted once behind a
-/// whole scrollable (or fixed) page so the same motif repeats consistently
-/// top to bottom, on any screen that uses it.
+/// One shared field of faint floating beauty/cosmetics emoji, painted once
+/// behind a whole scrollable (or fixed) page so the same motif repeats
+/// consistently top to bottom, on any screen that uses it.
 class PageFloatingTokens extends StatefulWidget {
   final bool isNarrow;
   const PageFloatingTokens({super.key, required this.isNarrow});
@@ -216,7 +216,7 @@ class _PageFloatingTokensState extends State<PageFloatingTokens> with SingleTick
   late final AnimationController _controller =
       AnimationController(vsync: this, duration: const Duration(seconds: 14))..repeat();
 
-  static const _tokens = ['🥐', '🍞', '🥖', '🥞', '🍰', '🧁', '🍩', '🥯', '🍪', '🥨'];
+  static const _tokens = ['💄', '💋', '💅', '🌸', '✨', '💖', '🎀', '🧴', '💐', '👛'];
 
   // Same reasoning as AuroraGlow: a 14s loop doesn't need 60 rebuilds a
   // second to look smooth, so every other tick reuses the prior frame's

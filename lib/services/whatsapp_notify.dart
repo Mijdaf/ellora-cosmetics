@@ -31,7 +31,7 @@ class WhatsAppNotify {
 
   static String _buildMessage(Order order) {
     final buffer = StringBuffer()
-      ..writeln('🥐 *New order — Nafas Bakery*')
+      ..writeln('💄 *New order — Ellora Cosmetics*')
       ..writeln()
       ..writeln('*Name:* ${order.fullName}')
       ..writeln('*Phone:* ${order.phone}')

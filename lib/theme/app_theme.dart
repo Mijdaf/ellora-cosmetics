@@ -1,46 +1,83 @@
 import 'package:flutter/material.dart';
 
-/// Brand palette sampled directly from the Nafas logo.
+/// Brand palette sampled directly from the Ellora Cosmetics logo
+/// (the pink "T/C" monogram on a blush-pink background).
 ///
-/// NOTE ON FONTS: Poppins is bundled locally as an asset (see pubspec.yaml
-/// and assets/fonts/) and referenced everywhere via
-/// `TextStyle(fontFamily: 'Poppins', ...)` — no network request to Google's
-/// font CDN, no fallback-font flash, first paint already has the real
-/// Poppins look.
+/// NOTE ON FONTS: Montserrat is bundled locally as an asset (see
+/// pubspec.yaml and assets/fonts/) and referenced everywhere via
+/// `TextStyle(fontFamily: 'Montserrat', ...)` — no network request to
+/// Google's font CDN, no fallback-font flash, first paint already has
+/// the real Montserrat look (matching the logo's clean geometric
+/// wordmark/tagline style).
 class AppColors {
   AppColors._();
 
-  // Sampled from logo background
-  static const Color espresso = Color(0xFF693720);
-  static const Color espressoDark = Color(0xFF4A2615);
-  static const Color espressoDeep = Color(0xFF2E1810);
+  // Deep rose tones — sampled from the darker end of the monogram's
+  // shading. Field names kept as `espresso*` so every screen/widget that
+  // already reads AppColors.espresso* just gets the new pink tone for free.
+  static const Color espresso = Color(0xFFB4507A); // deep rose
+  static const Color espressoDark = Color(0xFF8A3660); // darker rose
+  static const Color espressoDeep = Color(0xFF5C1E42); // deepest plum-rose (hero/dark backdrop)
 
-  // Sampled from the wheat stalk / accent text
-  static const Color wheatGold = Color(0xFFF9AF18);
-  static const Color wheatGoldLight = Color(0xFFFFC94D);
-  static const Color wheatGoldDark = Color(0xFFD98F0A);
+  // Sampled from the bold monogram / accent text.
+  static const Color wheatGold = Color(0xFFEE7793); // primary Ellora pink
+  static const Color wheatGoldLight = Color(0xFFF9A9C0); // light pink accent
+  static const Color wheatGoldDark = Color(0xFFD65D82); // deeper pink accent (buttons/hover)
 
-  // Sampled from the wordmark
-  static const Color cream = Color(0xFFFFFDF7);
+  // Sampled from the wordmark / page background.
+  static const Color cream = Color(0xFFFFFBF5); // near-white, warmed toward Vanilla Ice
   static const Color pureWhite = Color(0xFFFFFFFF);
 
   static const List<Color> heroGradient = [espressoDeep, espresso, espressoDark];
   static const List<Color> goldGradient = [wheatGoldLight, wheatGold, wheatGoldDark];
 
+  // ---------------------------------------------------------------------
+  // Pantone pastel palette (client-supplied swatch board). Brand pink
+  // (espresso*/wheatGold* above) is untouched — these pastels are used
+  // only for neutral surfaces/backgrounds/borders and small accent
+  // moments, so the brand pink still reads as *the* accent color against
+  // a softer, more editorial backdrop.
+  // ---------------------------------------------------------------------
+  static const Color pantoneVanillaIce = Color(0xFFF9F1DE); // 11-0104 TCX
+  static const Color pantoneButtercream = Color(0xFFEBDCC0); // 11-0110 TCX
+  static const Color pantoneCoconutMilk = Color(0xFFEFE9DC); // 11-0608 TCX
+  static const Color pantoneSnowWhite = Color(0xFFF3F2EF); // 11-0602 TCX
+  static const Color pantoneHeavenlyPink = Color(0xFFF6DEE1); // 12-1305 TCX
+  static const Color pantoneShrinkingViolet = Color(0xFFF7DDE2); // 11-2511 TCX
+  static const Color pantone9285C = Color(0xFFF2EBE7); // 9285 C
+  static const Color pantoneOrchidIce = Color(0xFFDDCCD6); // 13-3406 TCX
+  static const Color pantoneWhispyBlue = Color(0xFFBFD1E0); // 13-4014 TSX
+  static const Color pantoneDiaphonous = Color(0xFFE6F0EF); // 11-4607 TCX
+  static const Color pantoneSylvanGreen = Color(0xFFDEE7CD); // 9581 C
+
+  /// Small accent set (non-pink pastels from the swatch board) used for
+  /// bits of variety — e.g. category chips — so the storefront doesn't
+  /// read as one flat pink block. The brand pink is always used for the
+  /// *selected/active* state, these only ever sit in an unselected/idle
+  /// state.
+  static const List<Color> pastelAccents = [
+    pantoneWhispyBlue,
+    pantoneDiaphonous,
+    pantoneSylvanGreen,
+    pantoneOrchidIce,
+    pantoneButtercream,
+  ];
+
   // Soft, warm alternative to heroGradient used for the page backdrop in
-  // "light mood" — the hero banner itself always stays espresso (it's the
+  // "light mood" — the hero banner itself always stays deep rose (it's the
   // brand's fixed masthead), but everything below it can switch to this
-  // brighter, cream-toned backdrop instead.
-  static const List<Color> lightPageGradient = [Color(0xFFFFF3DC), surfaceCream, Color(0xFFFFF3DC)];
+  // brighter, pastel-toned backdrop instead.
+  static const List<Color> lightPageGradient = [pantoneVanillaIce, surfaceCream, pantoneHeavenlyPink];
 
   // Unified surface tones so every section reads as one family, not
-  // separate blocks of color.
-  static const Color surfaceCream = Color(0xFFFFF9EC); // warmed cream, closer to gold
-  static const Color cardBorder = Color(0x33F9AF18); // wheatGold @ 20%
+  // separate blocks of color. Now sampled from the Pantone board (a soft
+  // blush-neutral, close to "9285 C") instead of a flat pink tint.
+  static const Color surfaceCream = pantone9285C;
+  static const Color cardBorder = Color(0x33EE7793); // wheatGold(pink) @ 20%
   static const Color textOnCream = espressoDark;
 }
 
-/// Global "page mood" switch — dark (espresso, default) or light (cream).
+/// Global "page mood" switch — dark (deep rose, default) or light (blush).
 /// A single ValueNotifier is enough here (no extra state-management
 /// package): any widget can react to it with a ValueListenableBuilder,
 /// and toggling it only costs a rebuild of the small subtree that
@@ -51,16 +88,16 @@ class AppMood {
   static void toggle() => isDark.value = !isDark.value;
 }
 
-/// Font: **Poppins** for English copy, **Cairo** (a clean, modern
+/// Font: **Montserrat** for English copy, **Cairo** (a clean, modern
 /// Arabic typeface — also bundled locally under assets/fonts/) for Arabic
 /// copy. Use [AppTheme.fontFor] anywhere a `TextStyle` is built directly
-/// with a hardcoded `fontFamily: 'Poppins'` so it swaps to Cairo when
+/// with a hardcoded `fontFamily: 'Montserrat'` so it swaps to Cairo when
 /// the storefront is in Arabic mode.
 class AppTheme {
   AppTheme._();
 
   /// Pick the right typeface for the current storefront language.
-  static String fontFor(bool isArabic) => isArabic ? 'Cairo' : 'Poppins';
+  static String fontFor(bool isArabic) => isArabic ? 'Cairo' : 'Montserrat';
 
   static TextStyle _display(bool isArabic) =>
       TextStyle(fontFamily: fontFor(isArabic), fontWeight: FontWeight.w600);
@@ -110,16 +147,16 @@ class AppTheme {
         ),
       );
 
-  /// Large italic-serif brand wordmark ("Nafas") for hero/nav/footer moments.
+  /// Large italic-serif brand wordmark ("Ellora") for hero/nav/footer moments.
   /// Pass `isArabic: true` when the wordmark sits next to Arabic copy so it
-  /// picks up Cairo instead of Poppins.
+  /// picks up Cairo instead of Montserrat.
   static TextStyle brandWordmark({bool isArabic = false}) => _display(isArabic).copyWith(
         fontWeight: FontWeight.w600,
         color: AppColors.cream,
         letterSpacing: 0.5,
       );
 
-  /// Small gold caption/eyebrow text — used under the wordmark and above
+  /// Small pink caption/eyebrow text — used under the wordmark and above
   /// section titles for a boutique, editorial feel. The wide letter-spacing
   /// is an English-uppercase effect only: Arabic letters connect to their
   /// neighbors, so spacing them out breaks the connections and makes the
@@ -132,8 +169,8 @@ class AppTheme {
       );
 
   /// Build the app's ThemeData for the given storefront language — English
-  /// (Poppins) or Arabic (Cairo). The admin dashboard always passes
-  /// `false` so it stays in Poppins/English no matter what a shopper has
+  /// (Montserrat) or Arabic (Cairo). The admin dashboard always passes
+  /// `false` so it stays in Montserrat/English no matter what a shopper has
   /// picked on the public site.
   static ThemeData themeFor(bool isArabic) => ThemeData(
         useMaterial3: true,
@@ -148,7 +185,7 @@ class AppTheme {
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.wheatGold,
-            foregroundColor: AppColors.espressoDeep,
+            foregroundColor: AppColors.pureWhite,
             padding: const EdgeInsets.symmetric(horizontal: 28),
             minimumSize: const Size(0, 54),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(27)),
@@ -158,7 +195,7 @@ class AppTheme {
         ),
       );
 
-  /// English/Poppins theme — used by the admin dashboard, and as the
+  /// English/Montserrat theme — used by the admin dashboard, and as the
   /// storefront's default before `AppLanguage.isArabic` is read.
   static ThemeData get light => themeFor(false);
 }

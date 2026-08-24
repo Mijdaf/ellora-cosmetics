@@ -1,5 +1,5 @@
 -- =============================================================================
--- Nafas Bakery — Supabase schema
+-- Ellora Cosmetics — Supabase schema
 -- Run this once in Supabase Dashboard → SQL Editor → New query → Run.
 -- Safe to re-run: every statement uses "if not exists" / "on conflict".
 -- =============================================================================
@@ -153,7 +153,7 @@ create policy "admin delete banner images" on storage.objects
 -- -----------------------------------------------------------------------------
 -- No seed data — the owner adds every category and product from the
 -- dashboard. If you're re-running this on a database that already has the
--- old hardcoded categories (pastry/cake/bread/coffee) baked into existing
+-- old hardcoded categories (makeup/skincare/fragrance) baked into existing
 -- product rows, that's fine — those rows just keep their text value until
 -- you edit them from the dashboard and pick one of your new categories.
 -- -----------------------------------------------------------------------------

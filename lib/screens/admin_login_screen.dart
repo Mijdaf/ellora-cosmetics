@@ -81,7 +81,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                         fontSize: 30,
                         fontWeight: FontWeight.w600,
                         color: AppColors.espressoDeep,
-                        fontFamily: 'Poppins',
+                        fontFamily: 'Montserrat',
                       ),
                     ),
                     const SizedBox(height: 24),

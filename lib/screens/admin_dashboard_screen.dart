@@ -197,7 +197,7 @@ class _DashboardTabsState extends State<_DashboardTabs> {
               ),
               const SizedBox(width: 12),
               _TabIconButton(
-                icon: Icons.bakery_dining_rounded,
+                icon: Icons.face_retouching_natural_rounded,
                 label: 'Products',
                 badgeCount: 0,
                 isDark: widget.isDark,
@@ -368,7 +368,7 @@ class _TopBar extends StatelessWidget {
                     fontSize: 28,
                     fontWeight: FontWeight.w600,
                     color: titleColor,
-                    fontFamily: 'Poppins',
+                    fontFamily: 'Montserrat',
                   ),
                 ),
               ),

@@ -26,53 +26,53 @@ class S {
 
   static const Map<String, String> _en = {
     // Nav bar
-    'nav_menu': 'Menu',
+    'nav_menu': 'Shop',
     'nav_about': 'About',
     'nav_locations': 'Locations',
     'cart_empty': 'Your cart is empty',
     'cart_items_one': '1 item in cart',
     'cart_items_other': '%d items in cart',
     'subtotal': 'Subtotal',
-    'browse_menu': 'Browse menu',
+    'browse_menu': 'Browse shop',
     'view_cart': 'View cart',
     'you_might_also_like': 'You might also like',
     'delivery_estimate': 'Estimated delivery within 2–4 business days',
     'continue_shopping': 'Continue shopping',
 
     // Hero
-    'hero_eyebrow': 'BAKED WITH LOVE, DAILY',
-    'hero_headline': 'Fresh Croissants, Pancakes\n& Pastries — Every Morning',
-    'hero_body': 'Every loaf, roll and croissant at Nafas is laminated, '
-        'proofed and baked in small batches — so what reaches your table '
-        'still feels warm from the oven.',
-    'explore_menu': 'Explore the Menu',
+    'hero_eyebrow': 'CLEAN BEAUTY, MADE SIMPLE',
+    'hero_headline': 'Makeup & Skincare\nThat Feels Like You',
+    'hero_body': 'Every product at Ellora is cruelty-free, dermatologist-tested '
+        'and made in small batches — so what reaches your vanity is made '
+        'with the same care your skin deserves.',
+    'explore_menu': 'Explore the Shop',
     'visit_us': 'Visit Us',
 
     // Menu section
-    'baked_fresh_every_day': 'BAKED FRESH EVERY DAY',
-    'our_fresh_menu': 'Our Fresh Menu',
+    'baked_fresh_every_day': 'NEW ARRIVALS WEEKLY',
+    'our_fresh_menu': 'Our Collection',
     'all': 'All',
     'search_products': 'Search products…',
     'no_products_found': 'No products match your search.',
 
     // Story banner
     'story_quote':
-        '"Nafas" means breath — the pause after the first bite\nof something baked slowly, and with care.',
+        '"Ellora" is for the girl who does it all — bold, soft, effortless.\nBeauty made for real life.',
     'our_story': 'Our Story',
 
     // Footer
-    'baked_with_love': 'BAKED WITH LOVE',
+    'baked_with_love': 'MADE WITH LOVE',
     'footer_tagline':
-        'Small-batch pastries, bread and coffee — baked fresh every morning, shared with warmth.',
+        'Makeup, skincare and fragrance — crafted with care, made for every kind of girl.',
     'quick_links': 'QUICK LINKS',
     'about_us': 'About Us',
     'contact': 'Contact',
-    'copyright': '© 2026 Nafas Bakery. All rights reserved.',
-    'made_with_care': 'Made with care, one loaf at a time.',
+    'copyright': '© 2026 Ellora Cosmetics. All rights reserved.',
+    'made_with_care': 'Made with love, one girl at a time.',
 
     // Cart screen
     'your_cart': 'Your Cart',
-    'cart_empty_body': 'Add some fresh pastries to get started.',
+    'cart_empty_body': 'Add some products to get started.',
     'remove': 'Remove',
     'checkout': 'Checkout',
     'each': 'each',
@@ -115,50 +115,50 @@ class S {
 
   static const Map<String, String> _ar = {
     // Nav bar
-    'nav_menu': 'القائمة',
+    'nav_menu': 'المتجر',
     'nav_about': 'من نحن',
     'nav_locations': 'الفروع',
     'cart_empty': 'سلتك فارغة',
     'cart_items_one': 'قطعة واحدة في السلة',
     'cart_items_other': '%d قطع في السلة',
     'subtotal': 'الإجمالي',
-    'browse_menu': 'تصفح القائمة',
+    'browse_menu': 'تصفح المتجر',
     'view_cart': 'عرض السلة',
     'you_might_also_like': 'قد يعجبك أيضًا',
     'delivery_estimate': 'التوصيل المتوقع خلال 2–4 أيام عمل',
     'continue_shopping': 'إكمال التسوق',
 
     // Hero
-    'hero_eyebrow': 'يُخبز بحب، يوميًا',
-    'hero_headline': 'كرواسون وبان كيك\nومعجنات طازجة كل صباح',
+    'hero_eyebrow': 'جمال طبيعي وبسيط',
+    'hero_headline': 'مكياج وعناية بالبشرة\nتليق بيكِ',
     'hero_body':
-        'كل رغيف وقطعة كرواسون في نفس تُعجن وتُخبز بدفعات صغيرة — لتصل إلى مائدتك وهي لا تزال دافئة من الفرن.',
-    'explore_menu': 'تصفح القائمة',
+        'كل منتج في إيلورا خالٍ من القسوة على الحيوان، ومُختبر جلديًا، ويُصنع بدفعات صغيرة — ليصل إليكِ باهتمام تستحقه بشرتك.',
+    'explore_menu': 'تصفح المتجر',
     'visit_us': 'زورونا',
 
     // Menu section
-    'baked_fresh_every_day': 'يُخبز طازجًا كل يوم',
-    'our_fresh_menu': 'قائمتنا الطازجة',
+    'baked_fresh_every_day': 'وصل حديثًا كل أسبوع',
+    'our_fresh_menu': 'تشكيلتنا',
     'all': 'الكل',
     'search_products': 'ابحث عن منتج…',
     'no_products_found': 'لا توجد منتجات مطابقة لبحثك.',
 
     // Story banner
-    'story_quote': '"نفس" تعني التنفّس — تلك اللحظة بعد أول قضمة\nمن شيء خُبز ببطء وعناية.',
+    'story_quote': '"إيلورا" لكل بنت بتعمل كل حاجة — جريئة وناعمة وسهلة.\nجمال يليق بحياتك اليومية.',
     'our_story': 'قصتنا',
 
     // Footer
-    'baked_with_love': 'يُخبز بحب',
-    'footer_tagline': 'معجنات وخبز وقهوة بدفعات صغيرة — تُخبز طازجة كل صباح، وتُقدَّم بدفء.',
+    'baked_with_love': 'بحب',
+    'footer_tagline': 'مكياج وعناية بالبشرة وعطور — تُصنع بعناية، لكل بنت.',
     'quick_links': 'روابط سريعة',
     'about_us': 'من نحن',
     'contact': 'تواصل معنا',
-    'copyright': '© 2026 مخبز نفس. جميع الحقوق محفوظة.',
-    'made_with_care': 'يُصنع بعناية، رغيفًا تلو الآخر.',
+    'copyright': '© 2026 إيلورا كوزمتكس. جميع الحقوق محفوظة.',
+    'made_with_care': 'يُصنع بحب، لكل بنت.',
 
     // Cart screen
     'your_cart': 'سلتك',
-    'cart_empty_body': 'أضف بعض المعجنات الطازجة للبدء.',
+    'cart_empty_body': 'أضيفي بعض المنتجات للبدء.',
     'remove': 'إزالة',
     'checkout': 'إتمام الطلب',
     'each': 'للقطعة',

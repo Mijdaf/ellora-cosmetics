@@ -116,7 +116,7 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
                       children: [
                         const _OrbitingLogoBadge(),
                         const SizedBox(width: 10),
-                        Text('Nafas', style: AppTheme.brandWordmark(isArabic: isArabic).copyWith(fontSize: 22, fontWeight: FontWeight.w700)),
+                        Text('Ellora', style: AppTheme.brandWordmark(isArabic: isArabic).copyWith(fontSize: 22, fontWeight: FontWeight.w700)),
                         const SizedBox(width: 14),
                         _MagneticNavLinks(onTap: onNavLinkTap, isArabic: isArabic, activeIndex: activeNavIndex),
                         const SizedBox(width: 12),
@@ -153,7 +153,7 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
   /// Phone layout: a single full-width glass pill spanning almost the
   /// whole screen — bag icon, wordmark and a small round avatar clustered
   /// on the leading side, hamburger sitting alone on the trailing side.
-  /// Mood/language toggles move into [NafasDrawer]'s footer on phones, so
+  /// Mood/language toggles move into [ElloraDrawer]'s footer on phones, so
   /// this bar stays exactly four elements, matching a plain storefront
   /// header instead of the desktop capsule's full icon row.
   Widget _buildMobileBar(BuildContext context, double t, bool isArabic) {
@@ -219,7 +219,7 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
                       ),
                       const SizedBox(width: 10),
                       Text(
-                        'Nafas',
+                        'Ellora',
                         style: AppTheme.brandWordmark(isArabic: isArabic).copyWith(fontSize: 19, fontWeight: FontWeight.w700),
                       ),
                       const SizedBox(width: 8),
@@ -258,7 +258,7 @@ class _MobileAvatar extends StatelessWidget {
         child: Image.asset(
           'assets/images/logo.jpg',
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => const Icon(Icons.eco, color: AppColors.wheatGold, size: 16),
+          errorBuilder: (_, __, ___) => const Icon(Icons.spa, color: AppColors.wheatGold, size: 16),
         ),
       ),
     );
@@ -348,7 +348,7 @@ class _OrbitingLogoBadgeState extends State<_OrbitingLogoBadge> with SingleTicke
           child: Image.asset(
             'assets/images/logo.jpg',
             fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => const Icon(Icons.eco, color: AppColors.wheatGold, size: 18),
+            errorBuilder: (_, __, ___) => const Icon(Icons.spa, color: AppColors.wheatGold, size: 18),
           ),
         ),
       ),
@@ -558,7 +558,7 @@ class _DropdownPanel extends StatelessWidget {
   }
 }
 
-/// Hamburger that opens the real phone [NafasDrawer] (via
+/// Hamburger that opens the real phone [ElloraDrawer] (via
 /// `Scaffold.of(context).openDrawer()`) instead of a floating dropdown —
 /// shown on narrow screens where the inline links are hidden. Morphs into
 /// an X while the drawer is open. [isOpen] is fed down from the Scaffold's
@@ -721,7 +721,7 @@ class _LanguageToggleButton extends StatelessWidget {
                     isArabic ? 'EN' : 'AR',
                     key: ValueKey(isArabic),
                     style: const TextStyle(
-                      fontFamily: 'Poppins',
+                      fontFamily: 'Montserrat',
                       color: AppColors.wheatGoldLight,
                       fontWeight: FontWeight.w700,
                       fontSize: 12,

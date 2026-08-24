@@ -36,7 +36,7 @@ class _AdminGateScreenState extends State<AdminGateScreen> {
     if (!_ready) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-    // The admin dashboard always stays in English/Poppins for the owner,
+    // The admin dashboard always stays in English/Montserrat for the owner,
     // no matter what language a shopper has picked on the public storefront
     // (the app-level theme swaps to Cairo for Arabic, so this route
     // pins its own Theme back to the fixed English one).

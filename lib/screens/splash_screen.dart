@@ -5,9 +5,9 @@ import '../widgets/animated_backdrop.dart';
 import 'admin_gate_screen.dart';
 import 'home_screen.dart';
 
-/// First thing shoppers see: the Nafas logo on a branded espresso
-/// background, held on screen for a fixed duration before the storefront
-/// fades in underneath it.
+/// First thing shoppers see: the Ellora Cosmetics logo on a branded deep
+/// rose background, held on screen for a fixed duration before the
+/// storefront fades in underneath it.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -95,7 +95,6 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
         // Same background tone the home screen uses, so there's no visual
         // "flash" or mismatch when the splash hands off to the storefront.
         final bgColor = isDark ? AppColors.espressoDark : AppColors.surfaceCream;
-        final taglineColor = isDark ? AppColors.wheatGold : AppColors.wheatGoldDark;
 
         return Scaffold(
           body: AnimatedBackdrop(
@@ -128,20 +127,12 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                             errorBuilder: (_, __, ___) => Container(
                               color: AppColors.espressoDeep,
                               alignment: Alignment.center,
-                              child: const Icon(Icons.eco, color: AppColors.wheatGold, size: 80),
+                              child: const Icon(Icons.spa, color: AppColors.wheatGold, size: 80),
                             ),
                           ),
                         ),
                       ),
                       const SizedBox(height: 28),
-                      // Tagline under the logo, echoing the wordmark's own
-                      // caption so the brand name reads even before the
-                      // storefront loads.
-                      Text(
-                        'مخبوز بحب',
-                        style: AppTheme.eyebrow(isArabic: true).copyWith(fontSize: 14, color: taglineColor),
-                      ),
-                      const SizedBox(height: 36),
                       _LoadingDots(controller: _dotsController),
                     ],
                   ),

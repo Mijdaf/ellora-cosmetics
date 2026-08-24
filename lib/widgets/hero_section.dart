@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import '../services/app_language.dart';
 import '../theme/app_theme.dart';
-import 'wheat_logo_3d.dart';
+import 'brand_logo_3d.dart';
 
 /// Hero section content only — background color, gradient and the floating
-/// pastry-emoji field are painted once for the whole page (see
+/// pastel-emoji field are painted once for the whole page (see
 /// `_PageBackdrop` in home_screen.dart) so every section shares exactly the
 /// same backdrop instead of each section owning its own.
 class HeroSection extends StatefulWidget {
@@ -67,7 +67,7 @@ class _HeroSectionState extends State<HeroSection> with TickerProviderStateMixin
           mainAxisSize: MainAxisSize.min,
           children: [
             _LetterReveal(
-              text: 'Nafas',
+              text: 'Ellora',
               style: AppTheme.brandWordmark(isArabic: isArabic).copyWith(fontSize: isNarrow ? 60 : 76, color: wordmarkColor),
               controller: _entrance,
               startInterval: 0.0,
@@ -159,7 +159,7 @@ class _HeroSectionState extends State<HeroSection> with TickerProviderStateMixin
       flex: isNarrow ? 0 : 5,
       child: Padding(
         padding: EdgeInsets.only(top: isNarrow ? 0 : 0, bottom: isNarrow ? 30 : 0),
-        child: const Center(child: WheatLogo3D(size: 220)),
+        child: const Center(child: BrandLogo3D(size: 220)),
       ),
     );
 
@@ -204,7 +204,7 @@ class _LetterReveal extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final letters = text.split('');
-    // The brand wordmark is always the Latin word "Nafas", even on the
+    // The brand wordmark is always the Latin word "Ellora", even on the
     // Arabic storefront — without this, the ambient RTL Directionality
     // (Arabic mode) lays these per-letter children out right-to-left and
     // the word visually reads backwards ("safaN").
