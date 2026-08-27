@@ -112,7 +112,7 @@ class _Particle {
     final rnd = math.Random(i * 977);
     return _Particle(
       seed: rnd.nextDouble() * math.pi * 2,
-      radius: 1.0 + rnd.nextDouble() * 2.2,
+      radius: 1.5 + rnd.nextDouble() * 3.3, // was 1.0 + 2.2 — bigger dots, per request
       speed: 0.4 + rnd.nextDouble() * 0.8,
       xBase: rnd.nextDouble(),
       yBase: rnd.nextDouble(),

@@ -133,7 +133,13 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                         ),
                       ),
                       const SizedBox(height: 28),
-                      _LoadingDots(controller: _dotsController),
+                      // Spans the full screen width (instead of a tight
+                      // cluster right under the logo) and each dot is a
+                      // little bigger, per request.
+                      SizedBox(
+                        width: MediaQuery.of(context).size.width,
+                        child: _LoadingDots(controller: _dotsController),
+                      ),
                     ],
                   ),
                 ),
@@ -154,7 +160,7 @@ class _LoadingDots extends StatelessWidget {
   final AnimationController controller;
 
   static const int _dotCount = 4;
-  static const double _dotSize = 10;
+  static const double _dotSize = 13; // was 10 — a bit bigger, per request
   static const double _travel = 10; // how far each dot rises, in pixels
 
   @override
@@ -163,7 +169,11 @@ class _LoadingDots extends StatelessWidget {
       animation: controller,
       builder: (context, _) {
         return Row(
-          mainAxisSize: MainAxisSize.min,
+          // spaceEvenly instead of the previous tight/packed row — now
+          // that this Row is stretched to the full screen width by the
+          // SizedBox in SplashScreen, this spreads the dots out across
+          // that width instead of leaving them bunched on one side.
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: List.generate(_dotCount, (i) {
             // Each dot's wave is offset from the next by a fixed phase, so
             // they rise one after another instead of all bouncing in sync.

@@ -192,7 +192,7 @@ class _AuroraParticle {
     final rnd = math.Random(i * 977);
     return _AuroraParticle(
       seed: rnd.nextDouble() * math.pi * 2,
-      radius: 1.3 + rnd.nextDouble() * 2.4,
+      radius: 2.0 + rnd.nextDouble() * 3.6, // was 1.3 + 2.4 — bigger dots, matching the splash screen
       speed: 0.4 + rnd.nextDouble() * 0.8,
       xBase: rnd.nextDouble(),
       yBase: rnd.nextDouble(),

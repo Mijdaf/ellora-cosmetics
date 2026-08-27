@@ -253,23 +253,46 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           // Phone navigation drawer — the hamburger in NavBar opens this
-          // (Scaffold.of(context).openDrawer()) instead of a small
-          // dropdown once the screen is narrow.
-          drawer: ValueListenableBuilder<int>(
-            valueListenable: _activeNavIndex,
-            builder: (context, activeNavIndex, __) => ElloraDrawer(
-              cartCount: _cartCount,
-              activeNavIndex: activeNavIndex,
-              isDark: isDark,
-              onNavLinkTap: [_scrollToMenu, _scrollToAbout],
-              onBrowseMenu: _scrollToMenu,
-              onViewCart: _openCart,
-            ),
-          ),
+          // (Scaffold.of(context).openDrawer()/openEndDrawer()) instead of
+          // a small dropdown once the screen is narrow.
+          //
+          // We want this to always slide in from the *physical* left edge
+          // of the screen, in both English and Arabic. Scaffold's `drawer`
+          // property always opens from the "start" edge (left in LTR,
+          // right in RTL), so under Arabic it would land on the right
+          // unless we swap it for `endDrawer` — whose "end" edge is left
+          // in RTL. Same swap applies to the open/close callback below.
+          drawer: isArabic
+              ? null
+              : ValueListenableBuilder<int>(
+                  valueListenable: _activeNavIndex,
+                  builder: (context, activeNavIndex, __) => ElloraDrawer(
+                    cartCount: _cartCount,
+                    activeNavIndex: activeNavIndex,
+                    isDark: isDark,
+                    onNavLinkTap: [_scrollToMenu, _scrollToAbout],
+                    onBrowseMenu: _scrollToMenu,
+                    onViewCart: _openCart,
+                  ),
+                ),
+          endDrawer: isArabic
+              ? ValueListenableBuilder<int>(
+                  valueListenable: _activeNavIndex,
+                  builder: (context, activeNavIndex, __) => ElloraDrawer(
+                    cartCount: _cartCount,
+                    activeNavIndex: activeNavIndex,
+                    isDark: isDark,
+                    onNavLinkTap: [_scrollToMenu, _scrollToAbout],
+                    onBrowseMenu: _scrollToMenu,
+                    onViewCart: _openCart,
+                  ),
+                )
+              : null,
           // Fires on every close path (swipe, tap-outside, back button, or
           // a link tap inside the drawer that calls Navigator.pop), so the
           // hamburger icon's morph-to-X state always stays accurate.
           onDrawerChanged: (isOpen) => setState(() => _isDrawerOpen = isOpen),
+          onEndDrawerChanged: (isOpen) => setState(() => _isDrawerOpen = isOpen),
           body: SingleChildScrollView(
             controller: _scrollController,
             child: Stack(
@@ -1179,7 +1202,7 @@ class _FooterState extends State<_Footer> with TickerProviderStateMixin {
                                           ),
                                         ),
                                         const SizedBox(height: 12),
-                                        Text('Ellora', style: AppTheme.brandWordmark(isArabic: isArabic).copyWith(fontSize: 28, color: isDark ? AppColors.cream : AppColors.espressoDeep)),
+                                        Text('Ellora Cosmetics', style: AppTheme.brandWordmark(isArabic: isArabic).copyWith(fontSize: 28, color: isDark ? AppColors.cream : AppColors.espressoDeep)),
                                       ],
                                     )
                                   : Row(
@@ -1213,7 +1236,7 @@ class _FooterState extends State<_Footer> with TickerProviderStateMixin {
                                           ),
                                         ),
                                         const SizedBox(width: 14),
-                                        Text('Ellora', style: AppTheme.brandWordmark(isArabic: isArabic).copyWith(fontSize: 28, color: isDark ? AppColors.cream : AppColors.espressoDeep)),
+                                        Text('Ellora Cosmetics', style: AppTheme.brandWordmark(isArabic: isArabic).copyWith(fontSize: 28, color: isDark ? AppColors.cream : AppColors.espressoDeep)),
                                       ],
                                     ),
                               const SizedBox(height: 10),

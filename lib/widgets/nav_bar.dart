@@ -116,7 +116,7 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
                       children: [
                         const _OrbitingLogoBadge(),
                         const SizedBox(width: 10),
-                        Text('Ellora', style: AppTheme.brandWordmark(isArabic: isArabic).copyWith(fontSize: 22, fontWeight: FontWeight.w700)),
+                        Text('Ellora Cosmetics', style: AppTheme.brandWordmark(isArabic: isArabic).copyWith(fontSize: 22, fontWeight: FontWeight.w700)),
                         const SizedBox(width: 14),
                         _MagneticNavLinks(onTap: onNavLinkTap, isArabic: isArabic, activeIndex: activeNavIndex),
                         const SizedBox(width: 12),
@@ -196,37 +196,45 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
                     t,
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 14),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      _CartButton(
-                        count: cartCount,
-                        items: cartItems,
-                        onBrowseMenu: onCartBrowseMenu,
-                        onViewCart: onViewCart,
-                        isArabic: isArabic,
-                        // `alignLeft` isn't about language, it's about which
-                        // physical screen edge the icon ends up next to. The
-                        // mobile bar's Row mirrors under RTL (this widget is
-                        // first in the list, so in Arabic it lands on the
-                        // right edge instead of the left), so the dropdown's
-                        // hang direction has to flip with it — otherwise in
-                        // Arabic the panel still anchors as if the icon were
-                        // on the left and hangs further right, straight off
-                        // the edge of the screen.
-                        alignLeft: !isArabic,
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        'Ellora',
-                        style: AppTheme.brandWordmark(isArabic: isArabic).copyWith(fontSize: 19, fontWeight: FontWeight.w700),
-                      ),
-                      const SizedBox(width: 8),
-                      const _MobileAvatar(),
-                      const SizedBox(width: 10),
-                      _DrawerMenuButton(isOpen: isDrawerOpen, onTap: onMenuTap),
-                    ],
+                  // 'Ellora Cosmetics' is noticeably wider than the old
+                  // 'Ellora'-only wordmark — wrapped in FittedBox (same as
+                  // the desktop bar above) so the whole row scales down to
+                  // fit narrow phone widths instead of overflowing.
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.center,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        _CartButton(
+                          count: cartCount,
+                          items: cartItems,
+                          onBrowseMenu: onCartBrowseMenu,
+                          onViewCart: onViewCart,
+                          isArabic: isArabic,
+                          // `alignLeft` isn't about language, it's about which
+                          // physical screen edge the icon ends up next to. The
+                          // mobile bar's Row mirrors under RTL (this widget is
+                          // first in the list, so in Arabic it lands on the
+                          // right edge instead of the left), so the dropdown's
+                          // hang direction has to flip with it — otherwise in
+                          // Arabic the panel still anchors as if the icon were
+                          // on the left and hangs further right, straight off
+                          // the edge of the screen.
+                          alignLeft: !isArabic,
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          'Ellora Cosmetics',
+                          style: AppTheme.brandWordmark(isArabic: isArabic).copyWith(fontSize: 19, fontWeight: FontWeight.w700),
+                        ),
+                        const SizedBox(width: 8),
+                        const _MobileAvatar(),
+                        const SizedBox(width: 10),
+                        _DrawerMenuButton(isOpen: isDrawerOpen, isArabic: isArabic, onTap: onMenuTap),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -568,8 +576,12 @@ class _DropdownPanel extends StatelessWidget {
 /// this button itself is tapped.
 class _DrawerMenuButton extends StatefulWidget {
   final bool isOpen;
+  // Which Scaffold drawer to drive: in Arabic (RTL) the drawer that's
+  // pinned to the physical left edge is `endDrawer`, not `drawer` — see
+  // the comment in home_screen.dart's `_buildScaffold`.
+  final bool isArabic;
   final VoidCallback? onTap;
-  const _DrawerMenuButton({required this.isOpen, this.onTap});
+  const _DrawerMenuButton({required this.isOpen, required this.isArabic, this.onTap});
 
   @override
   State<_DrawerMenuButton> createState() => _DrawerMenuButtonState();
@@ -597,10 +609,18 @@ class _DrawerMenuButtonState extends State<_DrawerMenuButton> with SingleTickerP
 
   void _handleTap() {
     final scaffold = Scaffold.of(context);
-    if (scaffold.isDrawerOpen) {
-      scaffold.closeDrawer();
+    if (widget.isArabic) {
+      if (scaffold.isEndDrawerOpen) {
+        scaffold.closeEndDrawer();
+      } else {
+        scaffold.openEndDrawer();
+      }
     } else {
-      scaffold.openDrawer();
+      if (scaffold.isDrawerOpen) {
+        scaffold.closeDrawer();
+      } else {
+        scaffold.openDrawer();
+      }
     }
     widget.onTap?.call();
   }

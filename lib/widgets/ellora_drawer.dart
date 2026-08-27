@@ -5,9 +5,11 @@ import '../theme/app_theme.dart';
 /// The phone-sized navigation drawer.
 ///
 /// On narrow screens the hamburger button in [NavBar] now opens this real
-/// `Drawer` (sliding in from the edge — left in LTR, right in RTL,
-/// automatically, since it reads the ambient `Directionality`) instead of a
-/// small floating dropdown. It carries everything the pill nav bar can't
+/// `Drawer` instead of a small floating dropdown. It always slides in from
+/// the physical left edge of the screen, in both English and Arabic —
+/// `home_screen.dart` swaps it between Scaffold's `drawer` and `endDrawer`
+/// slots depending on language so the "start"/"end" edge Flutter picks
+/// always resolves to the left. It carries everything the pill nav bar can't
 /// fit on a phone: the nav links, a cart shortcut, and the mood/language
 /// toggles — styled with the same espresso + gold palette so it reads as
 /// part of the same brand rather than a generic Material drawer.
@@ -80,9 +82,17 @@ class ElloraDrawer extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  Text(
-                    'Ellora',
-                    style: AppTheme.brandWordmark(isArabic: isArabic).copyWith(fontSize: 21, fontWeight: FontWeight.w700, color: onBg),
+                  // 'Ellora Cosmetics' is noticeably wider than the old
+                  // 'Ellora'-only wordmark — Flexible+ellipsis keeps it from
+                  // overflowing the drawer's fixed 288px width alongside the
+                  // logo and close button.
+                  Flexible(
+                    child: Text(
+                      'Ellora Cosmetics',
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                      style: AppTheme.brandWordmark(isArabic: isArabic).copyWith(fontSize: 21, fontWeight: FontWeight.w700, color: onBg),
+                    ),
                   ),
                   const Spacer(),
                   _DrawerIconButton(

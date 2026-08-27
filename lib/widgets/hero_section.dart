@@ -45,7 +45,6 @@ class _HeroSectionState extends State<HeroSection> with TickerProviderStateMixin
     // otherwise it's white text on a near-white background and unreadable.
     final headlineColor = isDark ? AppColors.cream : AppColors.espressoDeep;
     final wordmarkColor = isDark ? AppColors.cream : AppColors.espressoDeep;
-    final bodyColor = isDark ? AppColors.cream.withOpacity(0.85) : AppColors.espressoDark.withOpacity(0.85);
 
     // Built once, then arranged differently depending on layout: side by
     // side (text left, logo right) on wide screens, or stacked — logo
@@ -66,17 +65,22 @@ class _HeroSectionState extends State<HeroSection> with TickerProviderStateMixin
           crossAxisAlignment: isNarrow ? CrossAxisAlignment.center : CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            _LetterReveal(
-              text: 'Ellora',
-              style: AppTheme.brandWordmark(isArabic: isArabic).copyWith(fontSize: isNarrow ? 60 : 76, color: wordmarkColor),
-              controller: _entrance,
-              startInterval: 0.0,
-              endInterval: 0.55,
-            ),
-            const SizedBox(height: 6),
-            Text(
-              S.t('hero_eyebrow', isArabic),
-              style: AppTheme.eyebrow(isArabic: isArabic).copyWith(color: isDark ? AppColors.wheatGold : AppColors.wheatGoldDark),
+            SizedBox(
+              width: double.infinity,
+              // 'Ellora Cosmetics' is noticeably wider than the old
+              // 'Ellora'-only wordmark, so this scales it down to fit
+              // narrow phone widths instead of overflowing the row.
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: isNarrow ? Alignment.center : AlignmentDirectional.centerStart,
+                child: _LetterReveal(
+                  text: 'Ellora Cosmetics',
+                  style: AppTheme.brandWordmark(isArabic: isArabic).copyWith(fontSize: isNarrow ? 60 : 76, color: wordmarkColor),
+                  controller: _entrance,
+                  startInterval: 0.0,
+                  endInterval: 0.55,
+                ),
+              ),
             ),
             const SizedBox(height: 26),
             Text(
@@ -86,20 +90,6 @@ class _HeroSectionState extends State<HeroSection> with TickerProviderStateMixin
                   .textTheme
                   .displayLarge
                   ?.copyWith(fontSize: isNarrow ? 34 : 50, color: headlineColor),
-            ),
-            const SizedBox(height: 18),
-            ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: isNarrow ? 500 : 480),
-              child: Text(
-                S.t('hero_body', isArabic),
-                textAlign: isNarrow ? TextAlign.center : TextAlign.start,
-                style: TextStyle(
-                  color: bodyColor,
-                  fontSize: 16,
-                  height: 1.6,
-                  fontFamily: Theme.of(context).textTheme.bodyLarge?.fontFamily,
-                ),
-              ),
             ),
             const SizedBox(height: 34),
             Wrap(
