@@ -157,90 +157,117 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
   /// this bar stays exactly four elements, matching a plain storefront
   /// header instead of the desktop capsule's full icon row.
   Widget _buildMobileBar(BuildContext context, double t, bool isArabic) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 0),
-      child: SafeArea(
-        bottom: false,
-        child: Center(
-          child: IntrinsicWidth(
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeOut,
-              height: 60,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(30),
-                border: Border.all(
-                  color: AppColors.wheatGold.withOpacity(0.14 + 0.1 * t),
-                  width: 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.18 + 0.12 * t),
-                    blurRadius: 24,
-                    offset: const Offset(0, 8),
+    return ValueListenableBuilder<bool>(
+      valueListenable: AppMood.isDark,
+      builder: (context, isDark, _) {
+        // Icon/text colors need to flip too once the bar itself goes
+        // transparent in light mood — cream on the light cream page
+        // backdrop would be unreadable otherwise.
+        final fgColor = isDark ? AppColors.cream : AppColors.espressoDeep;
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(14, 14, 14, 0),
+          child: SafeArea(
+            bottom: false,
+            // Left in English, right in Arabic — an absolute screen side,
+            // not a directional start/end, per the request. IntrinsicWidth
+            // still hugs the bar to its content either way.
+            child: Align(
+              alignment: isArabic ? Alignment.centerRight : Alignment.centerLeft,
+              child: IntrinsicWidth(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeOut,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(30),
+                    border: Border.all(
+                      color: AppColors.wheatGold.withOpacity(0.14 + 0.1 * t),
+                      width: 1,
+                    ),
+                    boxShadow: isDark
+                        ? [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.18 + 0.12 * t),
+                              blurRadius: 24,
+                              offset: const Offset(0, 8),
+                            ),
+                          ]
+                        : const [],
                   ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(30),
-                child: Container(
-                  // No BackdropFilter here on purpose — this pill is pinned on
-                  // screen for the whole page, so a live blur behind it has to
-                  // re-sample everything scrolling underneath, every frame,
-                  // for as long as the page is being scrolled. The backing
-                  // color below is already 88-97% opaque, so a blur adds very
-                  // little visually while costing a lot on scroll.
-                  color: Color.lerp(
-                    AppColors.espressoDeep.withOpacity(0.88),
-                    AppColors.espressoDeep.withOpacity(0.97),
-                    t,
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
-                  // Wrapped in FittedBox (same as the desktop bar above) so
-                  // the whole row scales down to fit narrow phone widths
-                  // instead of overflowing.
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.center,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        _CartButton(
-                          count: cartCount,
-                          items: cartItems,
-                          onBrowseMenu: onCartBrowseMenu,
-                          onViewCart: onViewCart,
-                          isArabic: isArabic,
-                          // `alignLeft` isn't about language, it's about which
-                          // physical screen edge the icon ends up next to. The
-                          // mobile bar's Row mirrors under RTL (this widget is
-                          // first in the list, so in Arabic it lands on the
-                          // right edge instead of the left), so the dropdown's
-                          // hang direction has to flip with it — otherwise in
-                          // Arabic the panel still anchors as if the icon were
-                          // on the left and hangs further right, straight off
-                          // the edge of the screen.
-                          alignLeft: !isArabic,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(30),
+                    child: Container(
+                      // No BackdropFilter here on purpose — this pill is pinned on
+                      // screen for the whole page, so a live blur behind it has to
+                      // re-sample everything scrolling underneath, every frame,
+                      // for as long as the page is being scrolled. The backing
+                      // color below is already 88-97% opaque, so a blur adds very
+                      // little visually while costing a lot on scroll.
+                      //
+                      // In light mood the bar goes fully transparent instead —
+                      // just the border/shape stay, no solid backing at all.
+                      color: isDark
+                          ? Color.lerp(
+                              AppColors.espressoDeep.withOpacity(0.88),
+                              AppColors.espressoDeep.withOpacity(0.97),
+                              t,
+                            )
+                          : Colors.transparent,
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      // Wrapped in FittedBox (same as the desktop bar above) so
+                      // the whole row scales down to fit narrow phone widths
+                      // instead of overflowing.
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.center,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            _CartButton(
+                              count: cartCount,
+                              items: cartItems,
+                              onBrowseMenu: onCartBrowseMenu,
+                              onViewCart: onViewCart,
+                              isArabic: isArabic,
+                              iconColor: fgColor,
+                              // `alignLeft` isn't about language, it's about which
+                              // physical screen edge the icon ends up next to. The
+                              // mobile bar's Row mirrors under RTL (this widget is
+                              // first in the list, so in Arabic it lands on the
+                              // right edge instead of the left), so the dropdown's
+                              // hang direction has to flip with it — otherwise in
+                              // Arabic the panel still anchors as if the icon were
+                              // on the left and hangs further right, straight off
+                              // the edge of the screen.
+                              alignLeft: !isArabic,
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              'Ellora',
+                              style: AppTheme.brandWordmark(isArabic: isArabic)
+                                  .copyWith(fontSize: 19, fontWeight: FontWeight.w700, color: fgColor),
+                            ),
+                            const SizedBox(width: 8),
+                            _SecretAdminTap(child: _MobileAvatar(ringColor: fgColor)),
+                            const SizedBox(width: 10),
+                            _DrawerMenuButton(
+                              isOpen: isDrawerOpen,
+                              isArabic: isArabic,
+                              onTap: onMenuTap,
+                              barColor: fgColor,
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 10),
-                        Text(
-                          'Ellora',
-                          style: AppTheme.brandWordmark(isArabic: isArabic).copyWith(fontSize: 19, fontWeight: FontWeight.w700),
-                        ),
-                        const SizedBox(width: 8),
-                        _SecretAdminTap(child: const _MobileAvatar()),
-                        const SizedBox(width: 10),
-                        _DrawerMenuButton(isOpen: isDrawerOpen, isArabic: isArabic, onTap: onMenuTap),
-                      ],
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -291,7 +318,8 @@ class _SecretAdminTapState extends State<_SecretAdminTap> {
 /// thin gold ring, no spin (the desktop [_OrbitingLogoBadge]'s animation
 /// would be too busy at this size, next to the cart icon and hamburger).
 class _MobileAvatar extends StatelessWidget {
-  const _MobileAvatar();
+  final Color ringColor;
+  const _MobileAvatar({this.ringColor = AppColors.wheatGold});
 
   @override
   Widget build(BuildContext context) {
@@ -300,14 +328,14 @@ class _MobileAvatar extends StatelessWidget {
       height: 32,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: AppColors.wheatGold.withOpacity(0.6), width: 1.5),
+        border: Border.all(color: ringColor.withOpacity(0.6), width: 1.5),
       ),
       padding: const EdgeInsets.all(1.5),
       child: ClipOval(
         child: Image.asset(
           'assets/images/logo.jpg',
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => const Icon(Icons.spa, color: AppColors.wheatGold, size: 16),
+          errorBuilder: (_, __, ___) => Icon(Icons.spa, color: ringColor, size: 16),
         ),
       ),
     );
@@ -622,7 +650,8 @@ class _DrawerMenuButton extends StatefulWidget {
   // the comment in home_screen.dart's `_buildScaffold`.
   final bool isArabic;
   final VoidCallback? onTap;
-  const _DrawerMenuButton({required this.isOpen, required this.isArabic, this.onTap});
+  final Color barColor;
+  const _DrawerMenuButton({required this.isOpen, required this.isArabic, this.onTap, this.barColor = AppColors.cream});
 
   @override
   State<_DrawerMenuButton> createState() => _DrawerMenuButtonState();
@@ -711,7 +740,7 @@ class _DrawerMenuButtonState extends State<_DrawerMenuButton> with SingleTickerP
         child: Container(
           width: 20,
           height: 2,
-          decoration: BoxDecoration(color: AppColors.cream, borderRadius: BorderRadius.circular(2)),
+          decoration: BoxDecoration(color: widget.barColor, borderRadius: BorderRadius.circular(2)),
         ),
       );
 }
@@ -809,6 +838,7 @@ class _CartButton extends StatefulWidget {
   final VoidCallback? onViewCart;
   final bool isArabic;
   final bool alignLeft;
+  final Color iconColor;
   const _CartButton({
     required this.count,
     this.items = const [],
@@ -816,6 +846,7 @@ class _CartButton extends StatefulWidget {
     this.onViewCart,
     required this.isArabic,
     this.alignLeft = false,
+    this.iconColor = AppColors.cream,
   });
 
   @override
@@ -863,7 +894,7 @@ class _CartButtonState extends State<_CartButton> with SingleTickerProviderState
           children: [
             _CompactIconButton(
               onTap: toggle,
-              child: const Icon(Icons.shopping_bag_outlined, color: AppColors.cream, size: 19),
+              child: Icon(Icons.shopping_bag_outlined, color: widget.iconColor, size: 19),
             ),
             if (widget.count > 0)
               Positioned(
