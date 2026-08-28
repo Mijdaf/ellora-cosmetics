@@ -46,7 +46,7 @@ class Order {
   final String fullName;
   final String phone;
   final String address;
-  final String paymentMethod; // 'cod' | 'vodafone_cash' | 'instapay'
+  final String paymentMethod; // 'vodafone_cash' | 'instapay'
   final bool isCompleted;
   final double total;
   final DateTime createdAt;
@@ -57,7 +57,7 @@ class Order {
     required this.fullName,
     required this.phone,
     required this.address,
-    this.paymentMethod = 'cod',
+    this.paymentMethod = 'vodafone_cash',
     this.isCompleted = false,
     required this.total,
     required this.createdAt,

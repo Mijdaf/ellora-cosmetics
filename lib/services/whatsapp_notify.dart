@@ -53,13 +53,11 @@ class WhatsAppNotify {
 
   static String _paymentLabel(String method) {
     switch (method) {
-      case 'vodafone_cash':
-        return 'Vodafone Cash';
       case 'instapay':
         return 'InstaPay';
-      case 'cod':
+      case 'vodafone_cash':
       default:
-        return 'Cash on delivery';
+        return 'Vodafone Cash';
     }
   }
 

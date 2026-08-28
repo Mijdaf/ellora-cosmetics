@@ -10,6 +10,7 @@ import '../services/store_settings.dart';
 import '../services/supabase_config.dart';
 import '../theme/app_theme.dart';
 import '../utils/text_dir.dart';
+import 'home_screen.dart';
 
 /// Admin dashboard for managing the product catalog, home banners,
 /// orders, and store settings. Every change writes straight through to
@@ -38,6 +39,58 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Dashboard-only: one step heavier than the shared app theme, so every
+    // Text widget in here that doesn't set its own fontWeight (headers,
+    // labels, form fields, buttons, etc.) still reads bolder than the rest
+    // of the app, without touching AppTheme.light (which the login screen
+    // and storefront also use).
+    final boldTextTheme = Theme.of(context).textTheme.copyWith(
+          displayLarge: _bolder(Theme.of(context).textTheme.displayLarge),
+          displayMedium: _bolder(Theme.of(context).textTheme.displayMedium),
+          displaySmall: _bolder(Theme.of(context).textTheme.displaySmall),
+          headlineLarge: _bolder(Theme.of(context).textTheme.headlineLarge),
+          headlineMedium: _bolder(Theme.of(context).textTheme.headlineMedium),
+          headlineSmall: _bolder(Theme.of(context).textTheme.headlineSmall),
+          titleLarge: _bolder(Theme.of(context).textTheme.titleLarge),
+          titleMedium: _bolder(Theme.of(context).textTheme.titleMedium),
+          titleSmall: _bolder(Theme.of(context).textTheme.titleSmall),
+          bodyLarge: _bolder(Theme.of(context).textTheme.bodyLarge),
+          bodyMedium: _bolder(Theme.of(context).textTheme.bodyMedium),
+          bodySmall: _bolder(Theme.of(context).textTheme.bodySmall),
+          labelLarge: _bolder(Theme.of(context).textTheme.labelLarge),
+          labelMedium: _bolder(Theme.of(context).textTheme.labelMedium),
+          labelSmall: _bolder(Theme.of(context).textTheme.labelSmall),
+        );
+
+    return Theme(
+      data: Theme.of(context).copyWith(textTheme: boldTextTheme),
+      child: _buildContent(context),
+    );
+  }
+
+  /// Returns [style] with its fontWeight stepped one notch heavier (e.g.
+  /// w400 → w500, w600 → w700), capping at w900, and every other property
+  /// (size, color, letter spacing, etc.) left untouched. Null (theme
+  /// default, which is w400) is treated as w400 so it still steps to w500.
+  static TextStyle? _bolder(TextStyle? style) {
+    const order = [
+      FontWeight.w100,
+      FontWeight.w200,
+      FontWeight.w300,
+      FontWeight.w400,
+      FontWeight.w500,
+      FontWeight.w600,
+      FontWeight.w700,
+      FontWeight.w800,
+      FontWeight.w900,
+    ];
+    final current = style?.fontWeight ?? FontWeight.w400;
+    final idx = order.indexOf(current);
+    final bumped = (idx == -1 || idx >= order.length - 1) ? FontWeight.w900 : order[idx + 1];
+    return (style ?? const TextStyle()).copyWith(fontWeight: bumped);
+  }
+
+  Widget _buildContent(BuildContext context) {
     return ValueListenableBuilder<bool>(
       valueListenable: AppMood.isDark,
       builder: (context, isDark, _) {
@@ -288,7 +341,7 @@ class _TabIconButton extends StatelessWidget {
                         child: Text(
                           '$badgeCount',
                           textAlign: TextAlign.center,
-                          style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: Colors.white),
+                          style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: Colors.white),
                         ),
                       ),
                     ),
@@ -299,7 +352,7 @@ class _TabIconButton extends StatelessWidget {
                 label,
                 style: TextStyle(
                   fontSize: 12,
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
                   color: selected ? AppColors.wheatGoldDark : textColor.withOpacity(0.65),
                 ),
               ),
@@ -366,7 +419,7 @@ class _TopBar extends StatelessWidget {
                   maxLines: 1,
                   style: TextStyle(
                     fontSize: 28,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                     color: titleColor,
                     fontFamily: 'Montserrat',
                   ),
@@ -382,7 +435,17 @@ class _TopBar extends StatelessWidget {
             borderRadius: BorderRadius.circular(14),
             onTap: () async {
               await SupabaseConfig.client.auth.signOut();
-              if (context.mounted) Navigator.of(context).pushReplacementNamed('/admin');
+              if (context.mounted) {
+                // Straight to the storefront, replacing the whole stack —
+                // not a named-route redirect, so the admin never passes
+                // back through the splash screen (which only checks for
+                // an active session, so it would've just bounced them
+                // right back into /admin anyway if it had still seen one).
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const HomeScreen()),
+                  (route) => false,
+                );
+              }
             },
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
@@ -391,7 +454,7 @@ class _TopBar extends StatelessWidget {
                 children: [
                   Icon(Icons.logout_rounded, size: 15, color: iconColor),
                   const SizedBox(width: 6),
-                  Text('Sign out', style: TextStyle(color: iconColor, fontWeight: FontWeight.w600, fontSize: 12)),
+                  Text('Sign out', style: TextStyle(color: iconColor, fontWeight: FontWeight.w700, fontSize: 12)),
                 ],
               ),
             ),
@@ -475,7 +538,7 @@ class _OrderManagerState extends State<_OrderManager> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Orders', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textColor)),
+          Text('Orders', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: textColor)),
           const SizedBox(height: 14),
           Row(
             children: [
@@ -557,7 +620,7 @@ class _FilterChip extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 12,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w800,
             letterSpacing: 0.3,
             color: selected ? AppColors.espressoDeep : textColor.withOpacity(0.7),
           ),
@@ -603,9 +666,8 @@ class _OrderTileState extends State<_OrderTile> {
   }
 
   String _paymentLabel(String method) => switch (method) {
-        'vodafone_cash' => 'Vodafone Cash',
         'instapay' => 'InstaPay',
-        _ => 'Cash on delivery',
+        _ => 'Vodafone Cash',
       };
 
   @override
@@ -642,7 +704,7 @@ class _OrderTileState extends State<_OrderTile> {
                                 child: Text(
                                   o.fullName.isEmpty ? 'Unnamed customer' : o.fullName,
                                   overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700, color: textColor),
+                                  style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w800, color: textColor),
                                 ),
                               ),
                               if (o.isCompleted) ...[
@@ -659,7 +721,7 @@ class _OrderTileState extends State<_OrderTile> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text(formatEGP(o.total), style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w800, color: AppColors.wheatGoldDark)),
+                        Text(formatEGP(o.total), style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w900, color: AppColors.wheatGoldDark)),
                         const SizedBox(height: 3),
                         Text('${o.items.length} item${o.items.length == 1 ? '' : 's'}', style: TextStyle(fontSize: 11.5, color: textColor.withOpacity(0.6))),
                       ],
@@ -678,19 +740,19 @@ class _OrderTileState extends State<_OrderTile> {
                   children: [
                     Divider(color: AppColors.cardBorder, height: 1),
                     const SizedBox(height: 10),
-                    Text('Phone', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, letterSpacing: 0.6, color: AppColors.wheatGoldDark)),
+                    Text('Phone', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, letterSpacing: 0.6, color: AppColors.wheatGoldDark)),
                     const SizedBox(height: 3),
                     Text(o.phone, style: TextStyle(fontSize: 13, color: textColor)),
                     const SizedBox(height: 12),
-                    Text('Payment', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, letterSpacing: 0.6, color: AppColors.wheatGoldDark)),
+                    Text('Payment', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, letterSpacing: 0.6, color: AppColors.wheatGoldDark)),
                     const SizedBox(height: 3),
                     Text(_paymentLabel(o.paymentMethod), style: TextStyle(fontSize: 13, color: textColor)),
                     const SizedBox(height: 12),
-                    Text('Delivery address', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, letterSpacing: 0.6, color: AppColors.wheatGoldDark)),
+                    Text('Delivery address', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, letterSpacing: 0.6, color: AppColors.wheatGoldDark)),
                     const SizedBox(height: 3),
                     Text(o.address, style: TextStyle(fontSize: 13, color: textColor)),
                     const SizedBox(height: 12),
-                    Text('Items', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, letterSpacing: 0.6, color: AppColors.wheatGoldDark)),
+                    Text('Items', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, letterSpacing: 0.6, color: AppColors.wheatGoldDark)),
                     const SizedBox(height: 6),
                     ...o.items.map((item) => Padding(
                           padding: const EdgeInsets.only(bottom: 5),
@@ -836,7 +898,7 @@ class _BannerManagerState extends State<_BannerManager> {
                       'Home Banners',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: isNarrow ? 13 : 16, fontWeight: FontWeight.w600, color: textColor),
+                      style: TextStyle(fontSize: isNarrow ? 13 : 16, fontWeight: FontWeight.w700, color: textColor),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -1073,7 +1135,7 @@ class _CategoryManagerState extends State<_CategoryManager> {
                       'Categories',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: isNarrow ? 13 : 16, fontWeight: FontWeight.w600, color: textColor),
+                      style: TextStyle(fontSize: isNarrow ? 13 : 16, fontWeight: FontWeight.w700, color: textColor),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -1125,7 +1187,7 @@ class _CategoryManagerState extends State<_CategoryManager> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(c.name, style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: textColor)),
+                      Text(c.name, style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: textColor)),
                       const SizedBox(width: 2),
                       IconButton(
                         onPressed: () => _deleteCategory(c),
@@ -1185,7 +1247,7 @@ class _ProductManager extends StatelessWidget {
                       'Manage Products',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: isNarrow ? 13 : 16, fontWeight: FontWeight.w600, color: textColor),
+                      style: TextStyle(fontSize: isNarrow ? 13 : 16, fontWeight: FontWeight.w700, color: textColor),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -1327,7 +1389,7 @@ class _ProductRow extends StatelessWidget {
                   product.name,
                   textDirection: autoTextDirection(product.name),
                   textAlign: autoTextAlign(product.name),
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: textColor),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: textColor),
                 ),
                 const SizedBox(height: 3),
                 Text(
@@ -1499,7 +1561,7 @@ class _ProductFormDialogState extends State<_ProductFormDialog> {
               children: [
                 Text(
                   _isEditing ? 'Edit Product' : 'Add Product',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 16),
                 Flexible(
@@ -1820,7 +1882,7 @@ class _SettingsManagerState extends State<_SettingsManager> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Settings', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textColor)),
+          Text('Settings', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: textColor)),
           const SizedBox(height: 6),
           Text(
             'These control what customers see at checkout — no code changes needed. '
@@ -1880,7 +1942,7 @@ class _SettingsField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: textColor)),
+        Text(label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: textColor)),
         const SizedBox(height: 6),
         TextField(
           controller: controller,

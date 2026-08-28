@@ -565,7 +565,7 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
   final _name = TextEditingController();
   final _phone = TextEditingController();
   final _address = TextEditingController();
-  String _paymentMethod = 'cod';
+  String _paymentMethod = 'vodafone_cash';
   bool _placing = false;
 
   @override
@@ -693,17 +693,9 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
                         const SizedBox(height: 16),
                         Text(S.t('payment_method', widget.isArabic), style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: textColor)),
                         RadioListTile<String>(
-                          value: 'cod',
-                          groupValue: _paymentMethod,
-                          onChanged: (v) => setState(() => _paymentMethod = v ?? 'cod'),
-                          title: Text(S.t('cash_on_delivery', widget.isArabic), style: TextStyle(fontSize: 13.5, color: textColor)),
-                          contentPadding: EdgeInsets.zero,
-                          dense: true,
-                        ),
-                        RadioListTile<String>(
                           value: 'vodafone_cash',
                           groupValue: _paymentMethod,
-                          onChanged: (v) => setState(() => _paymentMethod = v ?? 'cod'),
+                          onChanged: (v) => setState(() => _paymentMethod = v ?? 'vodafone_cash'),
                           title: Text(S.t('vodafone_cash', widget.isArabic), style: TextStyle(fontSize: 13.5, color: textColor)),
                           contentPadding: EdgeInsets.zero,
                           dense: true,
@@ -711,15 +703,13 @@ class _CheckoutDialogState extends State<_CheckoutDialog> {
                         RadioListTile<String>(
                           value: 'instapay',
                           groupValue: _paymentMethod,
-                          onChanged: (v) => setState(() => _paymentMethod = v ?? 'cod'),
+                          onChanged: (v) => setState(() => _paymentMethod = v ?? 'vodafone_cash'),
                           title: Text(S.t('instapay', widget.isArabic), style: TextStyle(fontSize: 13.5, color: textColor)),
                           contentPadding: EdgeInsets.zero,
                           dense: true,
                         ),
-                        if (_paymentMethod != 'cod') ...[
-                          const SizedBox(height: 8),
-                          _PayNowLink(paymentMethod: _paymentMethod, isArabic: widget.isArabic, textColor: textColor),
-                        ],
+                        const SizedBox(height: 8),
+                        _PayNowLink(paymentMethod: _paymentMethod, isArabic: widget.isArabic, textColor: textColor),
                       ],
                     ),
                   ),
