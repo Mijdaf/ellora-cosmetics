@@ -67,6 +67,7 @@ class S {
     'quick_links': 'QUICK LINKS',
     'about_us': 'About Us',
     'contact': 'Contact',
+    'dashboard': 'Dashboard',
     'copyright': '© 2026 Ellora Cosmetics. All rights reserved.',
     'made_with_care': 'Made with love, one girl at a time.',
 
@@ -153,6 +154,7 @@ class S {
     'quick_links': 'روابط سريعة',
     'about_us': 'من نحن',
     'contact': 'تواصل معنا',
+    'dashboard': 'لوحة التحكم',
     'copyright': '© 2026 إيلورا كوزمتكس. جميع الحقوق محفوظة.',
     'made_with_care': 'يُصنع بحب، لكل بنت.',
 

@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Central place for the Supabase project credentials and a couple of
@@ -17,7 +18,18 @@ class SupabaseConfig {
   /// initialization and lets [ready] be awaited later by whichever screen
   /// needs the client first.
   static Future<void> init() {
-    _readyFuture ??= Supabase.initialize(url: url, anonKey: anonKey);
+    _readyFuture ??= Supabase.initialize(url: url, anonKey: anonKey).then((_) {
+      // Seed the live notifier with whatever session Supabase restored
+      // (e.g. the admin was already logged in from a previous visit), then
+      // keep it in sync with every future login/logout/token event — this
+      // is what lets storefront-only widgets like the footer/drawer
+      // dashboard shortcut show or hide themselves live, instead of only
+      // reflecting the session state from the moment the app first built.
+      isLoggedInNotifier.value = isLoggedIn;
+      client.auth.onAuthStateChange.listen((_) {
+        isLoggedInNotifier.value = isLoggedIn;
+      });
+    });
     return _readyFuture!;
   }
 
@@ -30,6 +42,13 @@ class SupabaseConfig {
 
   /// True while a user session is active (i.e. the admin is logged in).
   static bool get isLoggedIn => client.auth.currentSession != null;
+
+  /// Live mirror of [isLoggedIn]. Storefront widgets that should only be
+  /// visible to a logged-in admin (e.g. the dashboard shortcut in the
+  /// footer/drawer) listen to this instead of reading [isLoggedIn] once,
+  /// so a normal shopper — who never has a session — never sees them, and
+  /// they appear/disappear immediately if the admin logs in or out.
+  static final ValueNotifier<bool> isLoggedInNotifier = ValueNotifier<bool>(false);
 
   /// Uploads [bytes] to the given Storage [bucket] under a fresh
   /// timestamp-based filename and returns its public URL. Used for both

@@ -8,6 +8,7 @@ import '../models/home_banner.dart';
 import '../models/product.dart';
 import '../services/app_language.dart';
 import '../services/store_settings.dart';
+import '../services/supabase_config.dart';
 import '../theme/app_theme.dart';
 import '../widgets/animated_background.dart';
 import '../widgets/hero_section.dart';
@@ -176,6 +177,11 @@ class _HomeScreenState extends State<HomeScreen> {
   void _scrollToAbout() => _scrollToKey(_aboutKey);
   void _scrollToLocations() => _scrollToKey(_locationsKey);
 
+  // Owner-only entry point into the admin dashboard. `/admin` (see
+  // AdminGateScreen) handles the login-vs-already-logged-in check itself,
+  // so this just needs to get there.
+  void _openDashboard() => Navigator.of(context).pushNamed('/admin');
+
   @override
   Widget build(BuildContext context) {
     final isNarrow = MediaQuery.of(context).size.width < 900;
@@ -273,6 +279,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     onNavLinkTap: [_scrollToMenu, _scrollToAbout],
                     onBrowseMenu: _scrollToMenu,
                     onViewCart: _openCart,
+                    onDashboardTap: _openDashboard,
                   ),
                 ),
           endDrawer: isArabic
@@ -285,6 +292,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     onNavLinkTap: [_scrollToMenu, _scrollToAbout],
                     onBrowseMenu: _scrollToMenu,
                     onViewCart: _openCart,
+                    onDashboardTap: _openDashboard,
                   ),
                 )
               : null,
@@ -488,6 +496,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           onMenuTap: _scrollToMenu,
                           onAboutTap: _scrollToAbout,
                           onLocationsTap: _scrollToLocations,
+                          onDashboardTap: _openDashboard,
                         ),
                       ),
                     ],
@@ -1079,6 +1088,7 @@ class _Footer extends StatefulWidget {
   final VoidCallback? onMenuTap;
   final VoidCallback? onAboutTap;
   final VoidCallback? onLocationsTap;
+  final VoidCallback? onDashboardTap;
   const _Footer({
     required this.isNarrow,
     required this.isDark,
@@ -1086,6 +1096,7 @@ class _Footer extends StatefulWidget {
     this.onMenuTap,
     this.onAboutTap,
     this.onLocationsTap,
+    this.onDashboardTap,
   });
 
   @override
@@ -1290,6 +1301,21 @@ class _FooterState extends State<_Footer> with TickerProviderStateMixin {
                               _FooterLink(S.t('about_us', isArabic), isDark: isDark, isArabic: isArabic, onTap: widget.onAboutTap),
                               _FooterLink(S.t('nav_locations', isArabic), isDark: isDark, isArabic: isArabic, onTap: widget.onLocationsTap),
                               _FooterLink(S.t('contact', isArabic), isDark: isDark, isArabic: isArabic),
+                              // Desktop-only, and only ever visible to a
+                              // logged-in admin — a regular shopper never
+                              // has a session, so isAdmin stays false and
+                              // this widget is literally never built for
+                              // them (not just visually hidden). Left out
+                              // of the mobile footer layout; on phones the
+                              // drawer's own Dashboard tile covers this
+                              // instead, gated the same way.
+                              if (!isNarrow)
+                                ValueListenableBuilder<bool>(
+                                  valueListenable: SupabaseConfig.isLoggedInNotifier,
+                                  builder: (context, isAdmin, _) => isAdmin
+                                      ? _FooterLink(S.t('dashboard', isArabic), isDark: isDark, isArabic: isArabic, onTap: widget.onDashboardTap)
+                                      : const SizedBox.shrink(),
+                                ),
                             ],
                           ),
                         ),

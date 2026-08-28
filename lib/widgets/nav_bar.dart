@@ -114,7 +114,7 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        const _OrbitingLogoBadge(),
+                        _SecretAdminTap(child: const _OrbitingLogoBadge()),
                         const SizedBox(width: 10),
                         Text('Ellora Cosmetics', style: AppTheme.brandWordmark(isArabic: isArabic).copyWith(fontSize: 22, fontWeight: FontWeight.w700)),
                         const SizedBox(width: 14),
@@ -230,7 +230,7 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
                           style: AppTheme.brandWordmark(isArabic: isArabic).copyWith(fontSize: 19, fontWeight: FontWeight.w700),
                         ),
                         const SizedBox(width: 8),
-                        const _MobileAvatar(),
+                        _SecretAdminTap(child: const _MobileAvatar()),
                         const SizedBox(width: 10),
                         _DrawerMenuButton(isOpen: isDrawerOpen, isArabic: isArabic, onTap: onMenuTap),
                       ],
@@ -242,6 +242,48 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Wraps the logo (desktop or mobile) so 5 taps within a short window
+/// quietly open the admin login (`/admin`) — the only in-app way in, since
+/// there's no address bar to type a URL into on a compiled mobile build.
+/// Taps reset if the gap between two of them is too long, so ordinary
+/// tapping/hovering by a shopper never trips it by accident.
+class _SecretAdminTap extends StatefulWidget {
+  final Widget child;
+  const _SecretAdminTap({required this.child});
+
+  @override
+  State<_SecretAdminTap> createState() => _SecretAdminTapState();
+}
+
+class _SecretAdminTapState extends State<_SecretAdminTap> {
+  static const _requiredTaps = 5;
+  static const _resetWindow = Duration(milliseconds: 600);
+  int _taps = 0;
+  DateTime? _lastTap;
+
+  void _onTap() {
+    final now = DateTime.now();
+    if (_lastTap != null && now.difference(_lastTap!) > _resetWindow) {
+      _taps = 0;
+    }
+    _lastTap = now;
+    _taps++;
+    if (_taps >= _requiredTaps) {
+      _taps = 0;
+      Navigator.of(context).pushNamed('/admin');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: _onTap,
+      child: widget.child,
     );
   }
 }

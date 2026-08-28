@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/app_language.dart';
+import '../services/supabase_config.dart';
 import '../theme/app_theme.dart';
 
 /// The phone-sized navigation drawer.
@@ -20,6 +21,7 @@ class ElloraDrawer extends StatelessWidget {
   final List<VoidCallback>? onNavLinkTap; // matches ['Menu', 'About']
   final VoidCallback? onViewCart;
   final VoidCallback? onBrowseMenu;
+  final VoidCallback? onDashboardTap;
 
   const ElloraDrawer({
     super.key,
@@ -29,6 +31,7 @@ class ElloraDrawer extends StatelessWidget {
     this.onNavLinkTap,
     this.onViewCart,
     this.onBrowseMenu,
+    this.onDashboardTap,
   });
 
   @override
@@ -137,6 +140,26 @@ class ElloraDrawer extends StatelessWidget {
                 Navigator.of(context).maybePop();
                 cartCount == 0 ? onBrowseMenu?.call() : onViewCart?.call();
               },
+            ),
+            // Owner-only entry point into the admin dashboard. Gated on a
+            // live session, same as the footer's version — a normal
+            // shopper never has one, so this tile is never built for them,
+            // not just visually hidden.
+            ValueListenableBuilder<bool>(
+              valueListenable: SupabaseConfig.isLoggedInNotifier,
+              builder: (context, isAdmin, _) => isAdmin
+                  ? _DrawerLinkTile(
+                      label: S.t('dashboard', isArabic),
+                      icon: Icons.dashboard_outlined,
+                      isActive: false,
+                      isArabic: isArabic,
+                      onBg: onBg,
+                      onTap: () {
+                        Navigator.of(context).maybePop();
+                        onDashboardTap?.call();
+                      },
+                    )
+                  : const SizedBox.shrink(),
             ),
             const SizedBox(height: 8),
             // Footer: mood + language toggles.
