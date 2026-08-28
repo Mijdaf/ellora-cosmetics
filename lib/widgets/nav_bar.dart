@@ -24,10 +24,10 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
   final int cartCount;
   final List<CartItem> cartItems;
   final double scrollProgress; // 0 = top of page, 1 = scrolled down
-  final int activeNavIndex; // -1 = none, matches ['Menu', 'About'] order
+  final int activeNavIndex; // -1 = none, matches ['Makeup', 'Accessories', 'About'] order
   final bool isDrawerOpen; // drives the mobile hamburger's morph-to-X state
   final VoidCallback? onMenuTap;
-  final List<VoidCallback>? onNavLinkTap; // matches ['Menu', 'About']
+  final List<VoidCallback>? onNavLinkTap; // matches ['Makeup', 'Accessories', 'About']
   final VoidCallback? onCartBrowseMenu;
   final VoidCallback? onViewCart;
 
@@ -224,23 +224,16 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            _CartButton(
-                              count: cartCount,
-                              items: cartItems,
-                              onBrowseMenu: onCartBrowseMenu,
-                              onViewCart: onViewCart,
+                            // Hamburger now leads the Row instead of trailing it,
+                            // so it's the widget that ends up on the outer screen
+                            // edge — left in English, right in Arabic — matching
+                            // the pill's own left/right anchor above instead of
+                            // sitting toward the middle of the bar.
+                            _DrawerMenuButton(
+                              isOpen: isDrawerOpen,
                               isArabic: isArabic,
-                              iconColor: fgColor,
-                              // `alignLeft` isn't about language, it's about which
-                              // physical screen edge the icon ends up next to. The
-                              // mobile bar's Row mirrors under RTL (this widget is
-                              // first in the list, so in Arabic it lands on the
-                              // right edge instead of the left), so the dropdown's
-                              // hang direction has to flip with it — otherwise in
-                              // Arabic the panel still anchors as if the icon were
-                              // on the left and hangs further right, straight off
-                              // the edge of the screen.
-                              alignLeft: !isArabic,
+                              onTap: onMenuTap,
+                              barColor: fgColor,
                             ),
                             const SizedBox(width: 10),
                             Text(
@@ -251,11 +244,23 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
                             const SizedBox(width: 8),
                             _SecretAdminTap(child: _MobileAvatar(ringColor: fgColor)),
                             const SizedBox(width: 10),
-                            _DrawerMenuButton(
-                              isOpen: isDrawerOpen,
+                            _CartButton(
+                              count: cartCount,
+                              items: cartItems,
+                              onBrowseMenu: onCartBrowseMenu,
+                              onViewCart: onViewCart,
                               isArabic: isArabic,
-                              onTap: onMenuTap,
-                              barColor: fgColor,
+                              iconColor: fgColor,
+                              // Cart is now the trailing widget, so it lands on the
+                              // inner/center-ish edge instead of the outer one —
+                              // last in the Row means it appears on the right in
+                              // English (LTR) and the left in Arabic (RTL, which
+                              // mirrors the Row). Hang the dropdown the opposite
+                              // way so it always opens back toward the middle of
+                              // the screen instead of off the edge — same formula
+                              // as the desktop bar's cart button above, which is
+                              // last in its Row too.
+                              alignLeft: isArabic,
                             ),
                           ],
                         ),
@@ -450,14 +455,16 @@ class _MagneticNavLinksState extends State<_MagneticNavLinks> {
   int? _hovered;
 
   // One icon per link, in the same order as the labels below — shown
-  // outlined when inactive and filled gold when active (hovered).
-  static const _icons = [Icons.restaurant_menu, Icons.favorite_border];
-  static const _iconsActive = [Icons.restaurant_menu, Icons.favorite];
+  // outlined when inactive and filled gold when active (hovered). Order is
+  // Makeup shop, Accessories shop, About.
+  static const _icons = [Icons.brush_outlined, Icons.diamond_outlined, Icons.favorite_border];
+  static const _iconsActive = [Icons.brush, Icons.diamond, Icons.favorite];
 
   @override
   Widget build(BuildContext context) {
     final labels = [
       S.t('nav_menu', widget.isArabic),
+      S.t('nav_accessories', widget.isArabic),
       S.t('nav_about', widget.isArabic),
     ];
     return SizedBox(

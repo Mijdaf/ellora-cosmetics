@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../services/app_language.dart';
-import '../services/supabase_config.dart';
 import '../theme/app_theme.dart';
 
 /// The phone-sized navigation drawer.
@@ -16,9 +15,9 @@ import '../theme/app_theme.dart';
 /// part of the same brand rather than a generic Material drawer.
 class ElloraDrawer extends StatelessWidget {
   final int cartCount;
-  final int activeNavIndex; // -1 = none, matches ['Menu', 'About'] order
+  final int activeNavIndex; // -1 = none, matches ['Makeup', 'Accessories', 'About'] order
   final bool isDark;
-  final List<VoidCallback>? onNavLinkTap; // matches ['Menu', 'About']
+  final List<VoidCallback>? onNavLinkTap; // matches ['Makeup', 'Accessories', 'About']
   final VoidCallback? onViewCart;
   final VoidCallback? onBrowseMenu;
   final VoidCallback? onDashboardTap;
@@ -46,9 +45,9 @@ class ElloraDrawer extends StatelessWidget {
   }
 
   Widget _buildDrawer(BuildContext context, bool isArabic) {
-    final labels = [S.t('nav_menu', isArabic), S.t('nav_about', isArabic)];
-    const icons = [Icons.restaurant_menu, Icons.favorite_border];
-    const iconsActive = [Icons.restaurant_menu, Icons.favorite];
+    final labels = [S.t('nav_menu', isArabic), S.t('nav_accessories', isArabic), S.t('nav_about', isArabic)];
+    const icons = [Icons.brush_outlined, Icons.diamond_outlined, Icons.favorite_border];
+    const iconsActive = [Icons.brush, Icons.diamond, Icons.favorite];
     // Mirrors the nav bar's own light/dark handling: espresso brown in
     // dark mood, a clean cream/white surface with dark espresso text and
     // icons in light mood — instead of always being hardcoded to the dark
@@ -141,26 +140,9 @@ class ElloraDrawer extends StatelessWidget {
                 cartCount == 0 ? onBrowseMenu?.call() : onViewCart?.call();
               },
             ),
-            // Owner-only entry point into the admin dashboard. Gated on a
-            // live session, same as the footer's version — a normal
-            // shopper never has one, so this tile is never built for them,
-            // not just visually hidden.
-            ValueListenableBuilder<bool>(
-              valueListenable: SupabaseConfig.isLoggedInNotifier,
-              builder: (context, isAdmin, _) => isAdmin
-                  ? _DrawerLinkTile(
-                      label: S.t('dashboard', isArabic),
-                      icon: Icons.dashboard_outlined,
-                      isActive: false,
-                      isArabic: isArabic,
-                      onBg: onBg,
-                      onTap: () {
-                        Navigator.of(context).maybePop();
-                        onDashboardTap?.call();
-                      },
-                    )
-                  : const SizedBox.shrink(),
-            ),
+            // Owner-only entry point into the admin dashboard used to live
+            // here, gated on a live session — removed from the drawer
+            // (still reachable via the secret 5-tap-logo shortcut).
             const SizedBox(height: 8),
             // Footer: mood + language toggles.
             Padding(

@@ -8,7 +8,6 @@ import '../models/home_banner.dart';
 import '../models/product.dart';
 import '../services/app_language.dart';
 import '../services/store_settings.dart';
-import '../services/supabase_config.dart';
 import '../theme/app_theme.dart';
 import '../widgets/animated_background.dart';
 import '../widgets/hero_section.dart';
@@ -157,13 +156,13 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // Finds the last section (Menu, then About) whose top edge has already
-  // scrolled up past the floating nav bar, and marks that one active — so
-  // the nav bar reflects where the user actually is on the page, not just
-  // what they're hovering over.
+  // Finds the last section (Makeup shop, then Accessories shop, then
+  // About) whose top edge has already scrolled up past the floating nav
+  // bar, and marks that one active — so the nav bar reflects where the
+  // user actually is on the page, not just what they're hovering over.
   void _updateActiveNavSection() {
     const navBarClearance = 110.0;
-    final sections = {0: _menuKeyMakeup, 1: _aboutKey};
+    final sections = {0: _menuKeyMakeup, 1: _menuKeyAccessories, 2: _aboutKey};
     int active = -1;
     double bestDy = double.negativeInfinity;
     sections.forEach((idx, key) {
@@ -273,7 +272,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   scrollProgress: scrollProgress,
                   activeNavIndex: activeNavIndex,
                   isDrawerOpen: _isDrawerOpen,
-                  onNavLinkTap: [_scrollToMenu, _scrollToAbout],
+                  onNavLinkTap: [_scrollToMenu, _scrollToAccessories, _scrollToAbout],
                   onCartBrowseMenu: _scrollToMenu,
                   onViewCart: _openCart,
                 ),
@@ -298,7 +297,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     cartCount: _cartCount,
                     activeNavIndex: activeNavIndex,
                     isDark: isDark,
-                    onNavLinkTap: [_scrollToMenu, _scrollToAbout],
+                    onNavLinkTap: [_scrollToMenu, _scrollToAccessories, _scrollToAbout],
                     onBrowseMenu: _scrollToMenu,
                     onViewCart: _openCart,
                     onDashboardTap: _openDashboard,
@@ -311,7 +310,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     cartCount: _cartCount,
                     activeNavIndex: activeNavIndex,
                     isDark: isDark,
-                    onNavLinkTap: [_scrollToMenu, _scrollToAbout],
+                    onNavLinkTap: [_scrollToMenu, _scrollToAccessories, _scrollToAbout],
                     onBrowseMenu: _scrollToMenu,
                     onViewCart: _openCart,
                     onDashboardTap: _openDashboard,
@@ -1383,21 +1382,6 @@ class _FooterState extends State<_Footer> with TickerProviderStateMixin {
                               _FooterLink(S.t('about_us', isArabic), isDark: isDark, isArabic: isArabic, onTap: widget.onAboutTap),
                               _FooterLink(S.t('nav_locations', isArabic), isDark: isDark, isArabic: isArabic, onTap: widget.onLocationsTap),
                               _FooterLink(S.t('contact', isArabic), isDark: isDark, isArabic: isArabic),
-                              // Desktop-only, and only ever visible to a
-                              // logged-in admin — a regular shopper never
-                              // has a session, so isAdmin stays false and
-                              // this widget is literally never built for
-                              // them (not just visually hidden). Left out
-                              // of the mobile footer layout; on phones the
-                              // drawer's own Dashboard tile covers this
-                              // instead, gated the same way.
-                              if (!isNarrow)
-                                ValueListenableBuilder<bool>(
-                                  valueListenable: SupabaseConfig.isLoggedInNotifier,
-                                  builder: (context, isAdmin, _) => isAdmin
-                                      ? _FooterLink(S.t('dashboard', isArabic), isDark: isDark, isArabic: isArabic, onTap: widget.onDashboardTap)
-                                      : const SizedBox.shrink(),
-                                ),
                             ],
                           ),
                         ),

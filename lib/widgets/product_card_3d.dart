@@ -167,13 +167,26 @@ class _ProductCard3DState extends State<ProductCard3D> with SingleTickerProvider
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 5),
-                        Text(
-                          widget.product.description,
-                          textDirection: autoTextDirection(widget.product.description),
-                          textAlign: autoTextAlign(widget.product.description),
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: descColor),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                        // Fixed height reserved for exactly 2 lines of bodyMedium
+                        // (fontSize 14 * line-height 1.5 = 21px/line) regardless of
+                        // how many lines the actual description wraps to. Without
+                        // this, a one-line description (e.g. "red lipstick") left
+                        // the text block shorter than a two-line one, and since the
+                        // photo above sits in an Expanded within a fixed-aspect-
+                        // ratio grid cell, it silently grew taller to fill that gap
+                        // — producing product photos of different heights card to
+                        // card. Reserving the same text height for every card keeps
+                        // every product image the same fixed size.
+                        SizedBox(
+                          height: 42,
+                          child: Text(
+                            widget.product.description,
+                            textDirection: autoTextDirection(widget.product.description),
+                            textAlign: autoTextAlign(widget.product.description),
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: descColor),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                         const SizedBox(height: 10),
                         Row(

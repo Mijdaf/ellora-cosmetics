@@ -25,8 +25,9 @@ class S {
   S._();
 
   static const Map<String, String> _en = {
-    // Nav bar
-    'nav_menu': 'Shop',
+    // Nav bar — one link per shop (Makeup, Accessories), plus About.
+    'nav_menu': 'Makeup',
+    'nav_accessories': 'Accessories',
     'nav_about': 'About',
     'nav_locations': 'Locations',
     'cart_empty': 'Your cart is empty',
@@ -121,8 +122,9 @@ class S {
   };
 
   static const Map<String, String> _ar = {
-    // Nav bar
-    'nav_menu': 'المتجر',
+    // Nav bar — one link per shop (Makeup, Accessories), plus About.
+    'nav_menu': 'مكياج',
+    'nav_accessories': 'إكسسوارات',
     'nav_about': 'من نحن',
     'nav_locations': 'الفروع',
     'cart_empty': 'سلتك فارغة',
