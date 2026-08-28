@@ -42,7 +42,7 @@ class S {
 
     // Hero
     'hero_eyebrow': 'CLEAN BEAUTY, MADE SIMPLE',
-    'hero_headline': 'Makeup & Skincare\nThat Feels Like You',
+    'hero_headline': 'Makeup & Accessories\nThat Feels Like You',
     'hero_body': 'Every product at Ellora is cruelty-free, dermatologist-tested '
         'and made in small batches — so what reaches your vanity is made '
         'with the same care your skin deserves.',
@@ -68,7 +68,7 @@ class S {
     'our_story': 'Our Story',
 
     // Footer
-    'baked_with_love': 'MADE WITH LOVE',
+    'with_love': 'MADE WITH LOVE',
     'footer_tagline':
         'Makeup, skincare and fragrance — crafted with care, made for every kind of girl.',
     'quick_links': 'QUICK LINKS',
@@ -139,7 +139,7 @@ class S {
 
     // Hero
     'hero_eyebrow': 'جمال طبيعي وبسيط',
-    'hero_headline': 'مكياج وعناية بالبشرة\nتليق بيكِ',
+    'hero_headline': 'مكياج وإكسسوارات\nتليق بيكِ',
     'hero_body':
         'كل منتج في إيلورا خالٍ من القسوة على الحيوان، ومُختبر جلديًا، ويُصنع بدفعات صغيرة — ليصل إليكِ باهتمام تستحقه بشرتك.',
     'explore_menu': 'تصفح المتجر',
@@ -163,8 +163,8 @@ class S {
     'our_story': 'قصتنا',
 
     // Footer
-    'baked_with_love': 'بحب',
-    'footer_tagline': 'مكياج وعناية بالبشرة وعطور — تُصنع بعناية، لكل بنت.',
+    'with_love': 'بحب',
+    'footer_tagline': 'مكياج وإكسسوارات — تُصنع بعناية، لكل بنت.',
     'quick_links': 'روابط سريعة',
     'about_us': 'من نحن',
     'contact': 'تواصل معنا',
