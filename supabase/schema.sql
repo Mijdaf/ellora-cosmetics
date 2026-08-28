@@ -12,8 +12,16 @@ create table if not exists public.categories (
   id uuid primary key default gen_random_uuid(),
   name text not null unique,
   position int not null default 0,
+  -- Which storefront shop this category belongs to. Two shops today:
+  -- 'makeup' and 'accessories' — each rendered as its own titled section
+  -- on Home with its own filter chips.
+  shop text not null default 'makeup',
   created_at timestamptz not null default now()
 );
+
+-- Adds the `shop` column if you're re-running this on a database created
+-- before the two-shop split existed.
+alter table public.categories add column if not exists shop text not null default 'makeup';
 
 create table if not exists public.products (
   id uuid primary key default gen_random_uuid(),

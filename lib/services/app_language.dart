@@ -55,6 +55,12 @@ class S {
     'search_products': 'Search products…',
     'no_products_found': 'No products match your search.',
 
+    // Shop sections (two shops, each with its own title + categories)
+    'shop_makeup_eyebrow': 'MAKEUP COLLECTION',
+    'shop_makeup_title': 'Makeup',
+    'shop_accessories_eyebrow': 'ACCESSORIES COLLECTION',
+    'shop_accessories_title': 'Accessories',
+
     // Story banner
     'story_quote':
         '"Ellora" is for the girl who does it all — bold, soft, effortless.\nBeauty made for real life.',
@@ -143,6 +149,12 @@ class S {
     'all': 'الكل',
     'search_products': 'ابحث عن منتج…',
     'no_products_found': 'لا توجد منتجات مطابقة لبحثك.',
+
+    // Shop sections (two shops, each with its own title + categories)
+    'shop_makeup_eyebrow': 'مجموعة المكياج',
+    'shop_makeup_title': 'مكياج',
+    'shop_accessories_eyebrow': 'مجموعة الإكسسوارات',
+    'shop_accessories_title': 'إكسسوارات',
 
     // Story banner
     'story_quote': '"إيلورا" لكل بنت بتعمل كل حاجة — جريئة وناعمة وسهلة.\nجمال يليق بحياتك اليومية.',

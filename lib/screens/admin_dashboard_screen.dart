@@ -1044,30 +1044,50 @@ class _CategoryManagerState extends State<_CategoryManager> {
 
   Future<void> _addCategory() async {
     final controller = TextEditingController();
-    final name = await showDialog<String>(
+    String shop = 'makeup';
+    final result = await showDialog<(String, String)>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('New category'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: const InputDecoration(labelText: 'Name'),
-          onSubmitted: (v) => Navigator.of(dialogContext).pop(v.trim()),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(dialogContext).pop(), child: const Text('Cancel')),
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(controller.text.trim()),
-            child: const Text('Add'),
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          title: const Text('New category'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextField(
+                controller: controller,
+                autofocus: true,
+                decoration: const InputDecoration(labelText: 'Name'),
+                onSubmitted: (v) => Navigator.of(dialogContext).pop((v.trim(), shop)),
+              ),
+              const SizedBox(height: 16),
+              const Text('Shop', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 8),
+              SegmentedButton<String>(
+                segments: const [
+                  ButtonSegment(value: 'makeup', label: Text('Makeup')),
+                  ButtonSegment(value: 'accessories', label: Text('Accessories')),
+                ],
+                selected: {shop},
+                onSelectionChanged: (s) => setDialogState(() => shop = s.first),
+              ),
+            ],
           ),
-        ],
+          actions: [
+            TextButton(onPressed: () => Navigator.of(dialogContext).pop(), child: const Text('Cancel')),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop((controller.text.trim(), shop)),
+              child: const Text('Add'),
+            ),
+          ],
+        ),
       ),
     );
-    if (name == null || name.isEmpty) return;
+    if (result == null || result.$1.isEmpty) return;
 
     setState(() => _adding = true);
     try {
-      await CategoryStore.add(name);
+      await CategoryStore.add(result.$1, shop: result.$2);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1175,37 +1195,58 @@ class _CategoryManagerState extends State<_CategoryManager> {
                     style: TextStyle(color: textColor.withOpacity(0.6), fontSize: 13.5)),
               ),
             )
-          else
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: categories.map((c) {
-                return Container(
-                  padding: const EdgeInsets.only(left: 14, right: 6, top: 6, bottom: 6),
-                  decoration: BoxDecoration(
-                    color: (widget.isDark ? Colors.white : AppColors.espressoDeep).withOpacity(0.04),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: AppColors.cardBorder),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(c.name, style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: textColor)),
-                      const SizedBox(width: 2),
-                      IconButton(
-                        onPressed: () => _deleteCategory(c),
-                        icon: const Icon(Icons.close_rounded, size: 16, color: Colors.redAccent),
-                        tooltip: 'Remove',
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
-            ),
+          else ...[
+            for (final entry in [('makeup', 'Makeup shop'), ('accessories', 'Accessories shop')]) ...[
+              _categoryGroup(entry.$1, entry.$2, textColor),
+              const SizedBox(height: 16),
+            ],
+          ],
         ],
       ),
+    );
+  }
+
+  Widget _categoryGroup(String shop, String label, Color textColor) {
+    final group = widget.categories.where((c) => c.shop == shop).toList();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: textColor.withOpacity(0.55))),
+        const SizedBox(height: 8),
+        if (group.isEmpty)
+          Text('No categories in this shop yet.',
+              style: TextStyle(fontSize: 12.5, color: textColor.withOpacity(0.45)))
+        else
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: group.map((c) {
+              return Container(
+                padding: const EdgeInsets.only(left: 14, right: 6, top: 6, bottom: 6),
+                decoration: BoxDecoration(
+                  color: (widget.isDark ? Colors.white : AppColors.espressoDeep).withOpacity(0.04),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: AppColors.cardBorder),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(c.name, style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: textColor)),
+                    const SizedBox(width: 2),
+                    IconButton(
+                      onPressed: () => _deleteCategory(c),
+                      icon: const Icon(Icons.close_rounded, size: 16, color: Colors.redAccent),
+                      tooltip: 'Remove',
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+      ],
     );
   }
 }
@@ -1624,7 +1665,12 @@ class _ProductFormDialogState extends State<_ProductFormDialog> {
                                       value: _category,
                                       decoration: const InputDecoration(labelText: 'Category'),
                                       items: widget.categories
-                                          .map((c) => DropdownMenuItem(value: c.name, child: Text(c.name)))
+                                          .map((c) => DropdownMenuItem(
+                                                value: c.name,
+                                                child: Text(
+                                                  '${c.name}  ·  ${c.shop == 'accessories' ? 'Accessories' : 'Makeup'}',
+                                                ),
+                                              ))
                                           .toList(),
                                       validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
                                       onChanged: (c) => setState(() => _category = c ?? _category),

@@ -48,13 +48,19 @@ class Category {
   final String id;
   final String name;
   final int position;
+  // Which storefront shop this category belongs to — 'makeup' or
+  // 'accessories'. Drives which of the two shop sections on Home shows
+  // this category's filter chip, and which shop a product tagged with it
+  // appears under.
+  final String shop;
 
-  const Category({required this.id, required this.name, this.position = 0});
+  const Category({required this.id, required this.name, this.position = 0, this.shop = 'makeup'});
 
   factory Category.fromMap(Map<String, dynamic> m) => Category(
         id: m['id'] as String,
         name: m['name'] as String? ?? '',
         position: (m['position'] as num?)?.toInt() ?? 0,
+        shop: m['shop'] as String? ?? 'makeup',
       );
 }
 
@@ -82,12 +88,13 @@ class CategoryStore {
     if (!_loaded) await loadAll();
   }
 
-  /// Adds a new category with the given [name] to the end of the list.
-  static Future<void> add(String name) async {
+  /// Adds a new category with the given [name] to the end of the list,
+  /// tagged to the given [shop] ('makeup' or 'accessories').
+  static Future<void> add(String name, {String shop = 'makeup'}) async {
     final position = categories.value.length;
     final row = await SupabaseConfig.client
         .from('categories')
-        .insert({'name': name, 'position': position})
+        .insert({'name': name, 'position': position, 'shop': shop})
         .select()
         .single();
     categories.value = [...categories.value, Category.fromMap(row)];

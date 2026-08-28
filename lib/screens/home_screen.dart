@@ -28,13 +28,19 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final GlobalKey _menuKey = GlobalKey();
+  // Two separate "shops" on Home — Makeup and Accessories — each with its
+  // own scroll target, category filter and search box, stacked one below
+  // the other on the page.
+  final GlobalKey _menuKeyMakeup = GlobalKey();
+  final GlobalKey _menuKeyAccessories = GlobalKey();
   final GlobalKey _aboutKey = GlobalKey();
   final GlobalKey _locationsKey = GlobalKey();
   final ScrollController _scrollController = ScrollController();
   final List<CartItem> _cartItems = [];
-  String? _filter;
-  String _searchQuery = '';
+  String? _filterMakeup;
+  String? _filterAccessories;
+  String _searchMakeup = '';
+  String _searchAccessories = '';
   // These two used to be plain State fields updated via setState from the
   // scroll listener below — which meant every scroll tick rebuilt this
   // entire screen (hero, banners, the whole product grid, story, footer —
@@ -157,7 +163,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // what they're hovering over.
   void _updateActiveNavSection() {
     const navBarClearance = 110.0;
-    final sections = {0: _menuKey, 1: _aboutKey};
+    final sections = {0: _menuKeyMakeup, 1: _aboutKey};
     int active = -1;
     double bestDy = double.negativeInfinity;
     sections.forEach((idx, key) {
@@ -173,7 +179,8 @@ class _HomeScreenState extends State<HomeScreen> {
     if (active != _activeNavIndex.value) _activeNavIndex.value = active;
   }
 
-  void _scrollToMenu() => _scrollToKey(_menuKey);
+  void _scrollToMenu() => _scrollToKey(_menuKeyMakeup);
+  void _scrollToAccessories() => _scrollToKey(_menuKeyAccessories);
   void _scrollToAbout() => _scrollToKey(_aboutKey);
   void _scrollToLocations() => _scrollToKey(_locationsKey);
 
@@ -202,17 +209,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   // reflect whatever the owner has added/removed, immediately.
                   valueListenable: CategoryStore.categories,
                   builder: (context, allCategories, ___) {
-                    final query = _searchQuery.trim().toLowerCase();
-                    final products = allProducts.where((p) {
-                      final matchesCategory = _filter == null || p.category == _filter;
-                      final matchesSearch = query.isEmpty ||
-                          p.name.toLowerCase().contains(query) ||
-                          p.description.toLowerCase().contains(query);
-                      return matchesCategory && matchesSearch;
-                    }).toList();
                     return Directionality(
                       textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
-                      child: _buildScaffold(context, isDark, isArabic, isNarrow, products, allCategories),
+                      child: _buildScaffold(context, isDark, isArabic, isNarrow, allProducts, allCategories),
                     );
                   },
                 );
@@ -229,9 +228,32 @@ class _HomeScreenState extends State<HomeScreen> {
     bool isDark,
     bool isArabic,
     bool isNarrow,
-    List<Product> products,
+    List<Product> allProducts,
     List<Category> categories,
   ) {
+    // Split into the two shops — every category belongs to exactly one
+    // (defaulting to 'makeup'), and a product counts as belonging to a
+    // shop if its category tag is one of that shop's categories.
+    final makeupCategories = categories.where((c) => c.shop != 'accessories').toList();
+    final accessoriesCategories = categories.where((c) => c.shop == 'accessories').toList();
+    final makeupCategoryNames = makeupCategories.map((c) => c.name).toSet();
+    final accessoriesCategoryNames = accessoriesCategories.map((c) => c.name).toSet();
+
+    List<Product> filterShop(Set<String> categoryNames, String? filter, String search) {
+      final query = search.trim().toLowerCase();
+      return allProducts.where((p) {
+        if (!categoryNames.contains(p.category)) return false;
+        final matchesCategory = filter == null || p.category == filter;
+        final matchesSearch = query.isEmpty ||
+            p.name.toLowerCase().contains(query) ||
+            p.description.toLowerCase().contains(query);
+        return matchesCategory && matchesSearch;
+      }).toList();
+    }
+
+    final makeupProducts = filterShop(makeupCategoryNames, _filterMakeup, _searchMakeup);
+    final accessoriesProducts = filterShop(accessoriesCategoryNames, _filterAccessories, _searchAccessories);
+
     return Scaffold(
       backgroundColor: isDark ? AppColors.espressoDark : AppColors.surfaceCream,
           extendBodyBehindAppBar: true,
@@ -363,125 +385,45 @@ class _HomeScreenState extends State<HomeScreen> {
                         categories: categories,
                         isDark: isDark,
                         isArabic: isArabic,
-                        onSelect: (name) {
-                          setState(() => _filter = name);
-                          _scrollToMenu();
+                        onSelect: (c) {
+                          if (c.shop == 'accessories') {
+                            setState(() => _filterAccessories = c.name);
+                            _scrollToAccessories();
+                          } else {
+                            setState(() => _filterMakeup = c.name);
+                            _scrollToMenu();
+                          }
                         },
                       ),
-                      Padding(
-                        key: _menuKey,
-                        padding: EdgeInsets.symmetric(horizontal: isNarrow ? 20 : 80, vertical: 70),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            ScrollReveal(
-                              offsetY: 18,
-                              child: Column(
-                                children: [
-                                  Text(
-                                    S.t('baked_fresh_every_day', isArabic),
-                                    style: AppTheme.eyebrow(isArabic: isArabic).copyWith(
-                                      color: isDark ? AppColors.wheatGold : AppColors.wheatGoldDark,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  Text(
-                                    S.t('our_fresh_menu', isArabic),
-                                    textAlign: TextAlign.center,
-                                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                          fontSize: isNarrow ? 32 : 42,
-                                          color: isDark ? AppColors.cream : AppColors.espressoDeep,
-                                        ),
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Container(
-                                    width: 60,
-                                    height: 3,
-                                    decoration: BoxDecoration(
-                                      gradient: const LinearGradient(colors: AppColors.goldGradient),
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 32),
-                            _ProductSearchField(
-                              isDark: isDark,
-                              isArabic: isArabic,
-                              value: _searchQuery,
-                              onChanged: (q) => setState(() => _searchQuery = q),
-                            ),
-                            const SizedBox(height: 24),
-                            _CategoryFilters(
-                              categories: categories,
-                              selected: _filter,
-                              isArabic: isArabic,
-                              isNarrow: isNarrow,
-                              onChanged: (c) => setState(() => _filter = c),
-                            ),
-                            const SizedBox(height: 40),
-                            LayoutBuilder(builder: (context, constraints) {
-                              final cols = constraints.maxWidth > 1100
-                                  ? 4
-                                  : constraints.maxWidth > 800
-                                      ? 3
-                                      : constraints.maxWidth > 260
-                                          ? 2
-                                          : 1;
-                              final spacing = constraints.maxWidth > 520 ? 24.0 : 14.0;
-                              return ValueListenableBuilder<bool>(
-                                valueListenable: ProductStore.isLoading,
-                                builder: (context, isLoading, __) {
-                                  if (isLoading && products.isEmpty) {
-                                    return ShimmerProductGrid(crossAxisCount: cols);
-                                  }
-                                  if (products.isEmpty) {
-                                    return Padding(
-                                      padding: const EdgeInsets.symmetric(vertical: 40),
-                                      child: Text(
-                                        S.t('no_products_found', isArabic),
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          fontFamily: AppTheme.fontFor(isArabic),
-                                          fontSize: 15,
-                                          color: (isDark ? AppColors.cream : AppColors.espressoDeep).withOpacity(0.6),
-                                        ),
-                                      ),
-                                    );
-                                  }
-                                  return GridView.builder(
-                                    shrinkWrap: true,
-                                    physics: const NeverScrollableScrollPhysics(),
-                                    itemCount: products.length,
-                                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                      crossAxisCount: cols,
-                                      crossAxisSpacing: spacing,
-                                      mainAxisSpacing: spacing,
-                                      childAspectRatio: 0.56,
-                                    ),
-                                    itemBuilder: (context, i) => _StaggeredEntrance(
-                                      index: i,
-                                      child: ProductCard3D(
-                                        product: products[i],
-                                        isArabic: isArabic,
-                                        isDark: isDark,
-                                        onAddToCart: () {
-                                          _addToCart(products[i]);
-                                          _openCart();
-                                        },
-                                        onAddQuantity: (qty) {
-                                          _addToCart(products[i], qty);
-                                          _openCart();
-                                        },
-                                      ),
-                                    ),
-                                  );
-                                },
-                              );
-                            }),
-                          ],
-                        ),
+                      _buildShopSection(
+                        context: context,
+                        isDark: isDark,
+                        isArabic: isArabic,
+                        isNarrow: isNarrow,
+                        sectionKey: _menuKeyMakeup,
+                        eyebrowKey: 'shop_makeup_eyebrow',
+                        titleKey: 'shop_makeup_title',
+                        categories: makeupCategories,
+                        products: makeupProducts,
+                        filter: _filterMakeup,
+                        onFilterChanged: (c) => setState(() => _filterMakeup = c),
+                        search: _searchMakeup,
+                        onSearchChanged: (q) => setState(() => _searchMakeup = q),
+                      ),
+                      _buildShopSection(
+                        context: context,
+                        isDark: isDark,
+                        isArabic: isArabic,
+                        isNarrow: isNarrow,
+                        sectionKey: _menuKeyAccessories,
+                        eyebrowKey: 'shop_accessories_eyebrow',
+                        titleKey: 'shop_accessories_title',
+                        categories: accessoriesCategories,
+                        products: accessoriesProducts,
+                        filter: _filterAccessories,
+                        onFilterChanged: (c) => setState(() => _filterAccessories = c),
+                        search: _searchAccessories,
+                        onSearchChanged: (q) => setState(() => _searchAccessories = q),
                       ),
                       KeyedSubtree(
                         key: _aboutKey,
@@ -505,6 +447,141 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         );
+  }
+
+  /// One full "shop" block — eyebrow + title, search field, category
+  /// filter chips, and the product grid — scoped to a single shop's own
+  /// categories and products. Called once per shop, stacked on the page.
+  Widget _buildShopSection({
+    required BuildContext context,
+    required bool isDark,
+    required bool isArabic,
+    required bool isNarrow,
+    required GlobalKey sectionKey,
+    required String eyebrowKey,
+    required String titleKey,
+    required List<Category> categories,
+    required List<Product> products,
+    required String? filter,
+    required ValueChanged<String?> onFilterChanged,
+    required String search,
+    required ValueChanged<String> onSearchChanged,
+  }) {
+    return Padding(
+      key: sectionKey,
+      padding: EdgeInsets.symmetric(horizontal: isNarrow ? 20 : 80, vertical: 70),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          ScrollReveal(
+            offsetY: 18,
+            child: Column(
+              children: [
+                Text(
+                  S.t(eyebrowKey, isArabic),
+                  style: AppTheme.eyebrow(isArabic: isArabic).copyWith(
+                    color: isDark ? AppColors.wheatGold : AppColors.wheatGoldDark,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  S.t(titleKey, isArabic),
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        fontSize: isNarrow ? 32 : 42,
+                        color: isDark ? AppColors.cream : AppColors.espressoDeep,
+                      ),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  width: 60,
+                  height: 3,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(colors: AppColors.goldGradient),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 32),
+          _ProductSearchField(
+            isDark: isDark,
+            isArabic: isArabic,
+            value: search,
+            onChanged: onSearchChanged,
+          ),
+          const SizedBox(height: 24),
+          _CategoryFilters(
+            categories: categories,
+            selected: filter,
+            isArabic: isArabic,
+            isNarrow: isNarrow,
+            onChanged: onFilterChanged,
+          ),
+          const SizedBox(height: 40),
+          LayoutBuilder(builder: (context, constraints) {
+            final cols = constraints.maxWidth > 1100
+                ? 4
+                : constraints.maxWidth > 800
+                    ? 3
+                    : constraints.maxWidth > 260
+                        ? 2
+                        : 1;
+            final spacing = constraints.maxWidth > 520 ? 24.0 : 14.0;
+            return ValueListenableBuilder<bool>(
+              valueListenable: ProductStore.isLoading,
+              builder: (context, isLoading, __) {
+                if (isLoading && products.isEmpty) {
+                  return ShimmerProductGrid(crossAxisCount: cols);
+                }
+                if (products.isEmpty) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 40),
+                    child: Text(
+                      S.t('no_products_found', isArabic),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: AppTheme.fontFor(isArabic),
+                        fontSize: 15,
+                        color: (isDark ? AppColors.cream : AppColors.espressoDeep).withOpacity(0.6),
+                      ),
+                    ),
+                  );
+                }
+                return GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: products.length,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: cols,
+                    crossAxisSpacing: spacing,
+                    mainAxisSpacing: spacing,
+                    childAspectRatio: 0.56,
+                  ),
+                  itemBuilder: (context, i) => _StaggeredEntrance(
+                    index: i,
+                    child: ProductCard3D(
+                      product: products[i],
+                      isArabic: isArabic,
+                      isDark: isDark,
+                      onAddToCart: () {
+                        _addToCart(products[i]);
+                        _openCart();
+                      },
+                      onAddQuantity: (qty) {
+                        _addToCart(products[i], qty);
+                        _openCart();
+                      },
+                    ),
+                  ),
+                );
+              },
+            );
+          }),
+        ],
+      ),
+    );
   }
 }
 
@@ -596,7 +673,7 @@ class _CategoryMarquee extends StatefulWidget {
   final List<Category> categories;
   final bool isDark;
   final bool isArabic;
-  final ValueChanged<String> onSelect;
+  final ValueChanged<Category> onSelect;
   const _CategoryMarquee({required this.categories, required this.isDark, required this.isArabic, required this.onSelect});
 
   @override
@@ -659,7 +736,7 @@ class _CategoryMarqueeState extends State<_CategoryMarquee> with SingleTickerPro
         children: [
           for (final c in widget.categories) ...[
             GestureDetector(
-              onTap: () => widget.onSelect(c.name),
+              onTap: () => widget.onSelect(c),
               child: Text(
                 widget.isArabic ? categoryDisplayName(c.name, true) : c.name.toUpperCase(),
                 style: TextStyle(
@@ -763,7 +840,8 @@ class _StaggeredEntranceState extends State<_StaggeredEntrance> with SingleTicke
 
 /// A rounded search field sitting above the category filters, letting
 /// shoppers narrow the menu grid by product name/description as they type.
-/// Fully controlled from the parent (`_HomeScreenState._searchQuery`) so it
+/// Fully controlled from the parent (one of `_HomeScreenState`'s per-shop
+/// search fields) so it
 /// composes cleanly with the existing category filter instead of fighting
 /// it — both narrow the same `products` list together.
 class _ProductSearchField extends StatefulWidget {
@@ -962,7 +1040,11 @@ class _HoverLiftChipState extends State<_HoverLiftChip> {
         curve: Curves.easeOut,
         transform: Matrix4.translationValues(0, _hover ? -3 : 0, 0),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.wheatGold : widget.accentColor,
+          // White background for every unselected chip — regardless of
+          // shop or category — with the category's accent color kept as
+          // the border so chips still read as distinct, just on a clean
+          // white pill instead of a solid pastel fill.
+          color: isSelected ? AppColors.wheatGold : Colors.white,
           border: Border.all(color: isSelected ? AppColors.wheatGold : widget.accentColor, width: 1.3),
           borderRadius: BorderRadius.circular(23),
           boxShadow: isSelected || _hover
