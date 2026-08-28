@@ -384,15 +384,18 @@ class _TopBar extends StatelessWidget {
           child: InkWell(
             customBorder: const CircleBorder(),
             onTap: () {
-              // When the dashboard is opened directly via the '/admin' URL
-              // (its normal entry point now that it's off the nav bar)
-              // there's nothing to pop back to, so fall back to the store.
-              final navigator = Navigator.of(context);
-              if (navigator.canPop()) {
-                navigator.pop();
-              } else {
-                navigator.pushReplacementNamed('/');
-              }
+              // Always straight to the storefront, replacing the whole
+              // stack — not a pop/named-route redirect, so this never
+              // passes through the splash screen and never depends on
+              // what's under this route in the stack. The admin's
+              // Supabase session stays alive in the background either way,
+              // so going home from here (or coming back to `/admin` again
+              // later) doesn't force a re-login — only actually signing
+              // out does that.
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (_) => const HomeScreen()),
+                (route) => false,
+              );
             },
             child: Padding(
               padding: const EdgeInsets.all(10),
@@ -1431,9 +1434,6 @@ class _ProductFormDialogState extends State<_ProductFormDialog> {
   late final TextEditingController _name;
   late final TextEditingController _description;
   late final TextEditingController _price;
-  late final TextEditingController _ingredients;
-  late final TextEditingController _allergens;
-  late final TextEditingController _prepMinutes;
   late final TextEditingController _rating;
   late final TextEditingController _reviewCount;
   late String? _category;
@@ -1452,9 +1452,6 @@ class _ProductFormDialogState extends State<_ProductFormDialog> {
     _name = TextEditingController(text: p?.name ?? '');
     _description = TextEditingController(text: p?.description ?? '');
     _price = TextEditingController(text: p != null ? p.price.toStringAsFixed(0) : '');
-    _ingredients = TextEditingController(text: p?.ingredients.join(', ') ?? '');
-    _allergens = TextEditingController(text: p?.allergens.join(', ') ?? '');
-    _prepMinutes = TextEditingController(text: p != null ? p.prepMinutes.toString() : '');
     _rating = TextEditingController(text: p != null ? p.rating.toString() : '4.8');
     _reviewCount = TextEditingController(text: p != null ? p.reviewCount.toString() : '0');
     final existingCategory = p?.category;
@@ -1472,9 +1469,6 @@ class _ProductFormDialogState extends State<_ProductFormDialog> {
     _name.dispose();
     _description.dispose();
     _price.dispose();
-    _ingredients.dispose();
-    _allergens.dispose();
-    _prepMinutes.dispose();
     _rating.dispose();
     _reviewCount.dispose();
     super.dispose();
@@ -1492,9 +1486,6 @@ class _ProductFormDialogState extends State<_ProductFormDialog> {
       if (mounted) setState(() => _imagePicking = false);
     }
   }
-
-  List<String> _splitCsv(String text) =>
-      text.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
@@ -1522,10 +1513,10 @@ class _ProductFormDialogState extends State<_ProductFormDialog> {
         tags: existing?.tags ?? const [],
         story: existing?.story ?? '',
         highlights: existing?.highlights ?? const [],
-        ingredients: _splitCsv(_ingredients.text),
-        allergens: _splitCsv(_allergens.text),
+        ingredients: existing?.ingredients ?? const [],
+        allergens: existing?.allergens ?? const [],
         calories: existing?.calories ?? 0,
-        prepMinutes: int.tryParse(_prepMinutes.text.trim()) ?? 0,
+        prepMinutes: existing?.prepMinutes ?? 0,
         rating: double.tryParse(_rating.text.trim()) ?? 4.8,
         reviewCount: int.tryParse(_reviewCount.text.trim()) ?? 0,
       );
@@ -1640,21 +1631,6 @@ class _ProductFormDialogState extends State<_ProductFormDialog> {
                                     ),
                             ),
                           ],
-                        ),
-                        TextFormField(
-                          controller: _ingredients,
-                          decoration: const InputDecoration(labelText: 'Ingredients (comma-separated)'),
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: _allergens,
-                          decoration: const InputDecoration(labelText: 'Allergens (comma-separated)'),
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: _prepMinutes,
-                          decoration: const InputDecoration(labelText: 'Prep (min)'),
-                          keyboardType: TextInputType.number,
                         ),
                         const SizedBox(height: 12),
                         Row(
