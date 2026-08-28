@@ -385,13 +385,13 @@ class _TopBar extends StatelessWidget {
               if (context.mounted) Navigator.of(context).pushReplacementNamed('/admin');
             },
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.logout_rounded, size: 18, color: iconColor),
-                  const SizedBox(width: 8),
-                  Text('Sign out', style: TextStyle(color: iconColor, fontWeight: FontWeight.w600, fontSize: 13)),
+                  Icon(Icons.logout_rounded, size: 15, color: iconColor),
+                  const SizedBox(width: 6),
+                  Text('Sign out', style: TextStyle(color: iconColor, fontWeight: FontWeight.w600, fontSize: 12)),
                 ],
               ),
             ),
@@ -822,23 +822,41 @@ class _BannerManagerState extends State<_BannerManager> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Home Banners', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textColor)),
-              ElevatedButton.icon(
-                onPressed: _uploading ? null : _addBanner,
-                icon: _uploading
-                    ? const SizedBox(
-                        width: 14,
-                        height: 14,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.espressoDeep),
-                      )
-                    : const Icon(Icons.add_photo_alternate_outlined, size: 18),
-                label: const Text('Add Banner'),
-                style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10)),
-              ),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              // Below ~360px, shrink the title/button down (smaller font,
+              // tighter padding, smaller icon) instead of stacking them —
+              // keeps everything on one line at every width.
+              final isNarrow = constraints.maxWidth < 360;
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(
+                    child: Text(
+                      'Home Banners',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: isNarrow ? 13 : 16, fontWeight: FontWeight.w600, color: textColor),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton.icon(
+                    onPressed: _uploading ? null : _addBanner,
+                    icon: _uploading
+                        ? SizedBox(
+                            width: isNarrow ? 12 : 14,
+                            height: isNarrow ? 12 : 14,
+                            child: const CircularProgressIndicator(strokeWidth: 2, color: AppColors.espressoDeep),
+                          )
+                        : Icon(Icons.add_photo_alternate_outlined, size: isNarrow ? 14 : 18),
+                    label: Text('Add Banner', style: TextStyle(fontSize: isNarrow ? 11.5 : 14)),
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(horizontal: isNarrow ? 10 : 16, vertical: isNarrow ? 6 : 10),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 6),
           Text(
@@ -1043,23 +1061,39 @@ class _CategoryManagerState extends State<_CategoryManager> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Categories', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textColor)),
-              ElevatedButton.icon(
-                onPressed: _adding ? null : _addCategory,
-                icon: _adding
-                    ? const SizedBox(
-                        width: 14,
-                        height: 14,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.espressoDeep),
-                      )
-                    : const Icon(Icons.add_rounded, size: 18),
-                label: const Text('Add Category'),
-                style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10)),
-              ),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              // Shrink instead of stack, same as the Home Banners header.
+              final isNarrow = constraints.maxWidth < 360;
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(
+                    child: Text(
+                      'Categories',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: isNarrow ? 13 : 16, fontWeight: FontWeight.w600, color: textColor),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton.icon(
+                    onPressed: _adding ? null : _addCategory,
+                    icon: _adding
+                        ? SizedBox(
+                            width: isNarrow ? 12 : 14,
+                            height: isNarrow ? 12 : 14,
+                            child: const CircularProgressIndicator(strokeWidth: 2, color: AppColors.espressoDeep),
+                          )
+                        : Icon(Icons.add_rounded, size: isNarrow ? 14 : 18),
+                    label: Text('Add Category', style: TextStyle(fontSize: isNarrow ? 11.5 : 14)),
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(horizontal: isNarrow ? 10 : 16, vertical: isNarrow ? 6 : 10),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 6),
           Text(
@@ -1140,24 +1174,32 @@ class _ProductManager extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Manage Products',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textColor),
-                ),
-              ),
-              const SizedBox(width: 12),
-              ElevatedButton.icon(
-                onPressed: () => _openProductForm(context),
-                icon: const Icon(Icons.add_rounded, size: 18),
-                label: const Text('Add Product'),
-                style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10)),
-              ),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              // Shrink instead of stack, same as the other card headers.
+              final isNarrow = constraints.maxWidth < 360;
+              return Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Manage Products',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: isNarrow ? 13 : 16, fontWeight: FontWeight.w600, color: textColor),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton.icon(
+                    onPressed: () => _openProductForm(context),
+                    icon: Icon(Icons.add_rounded, size: isNarrow ? 14 : 18),
+                    label: Text('Add Product', style: TextStyle(fontSize: isNarrow ? 11.5 : 14)),
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(horizontal: isNarrow ? 10 : 16, vertical: isNarrow ? 6 : 10),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 18),
           if (products.isEmpty)

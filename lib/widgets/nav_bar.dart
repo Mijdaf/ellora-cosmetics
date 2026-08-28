@@ -116,7 +116,7 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
                       children: [
                         _SecretAdminTap(child: const _OrbitingLogoBadge()),
                         const SizedBox(width: 10),
-                        Text('Ellora Cosmetics', style: AppTheme.brandWordmark(isArabic: isArabic).copyWith(fontSize: 22, fontWeight: FontWeight.w700)),
+                        Text('Ellora', style: AppTheme.brandWordmark(isArabic: isArabic).copyWith(fontSize: 22, fontWeight: FontWeight.w700)),
                         const SizedBox(width: 14),
                         _MagneticNavLinks(onTap: onNavLinkTap, isArabic: isArabic, activeIndex: activeNavIndex),
                         const SizedBox(width: 12),
@@ -196,10 +196,9 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
                     t,
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 14),
-                  // 'Ellora Cosmetics' is noticeably wider than the old
-                  // 'Ellora'-only wordmark — wrapped in FittedBox (same as
-                  // the desktop bar above) so the whole row scales down to
-                  // fit narrow phone widths instead of overflowing.
+                  // Wrapped in FittedBox (same as the desktop bar above) so
+                  // the whole row scales down to fit narrow phone widths
+                  // instead of overflowing.
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
                     alignment: Alignment.center,
@@ -226,7 +225,7 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
                         ),
                         const SizedBox(width: 10),
                         Text(
-                          'Ellora Cosmetics',
+                          'Ellora',
                           style: AppTheme.brandWordmark(isArabic: isArabic).copyWith(fontSize: 19, fontWeight: FontWeight.w700),
                         ),
                         const SizedBox(width: 8),

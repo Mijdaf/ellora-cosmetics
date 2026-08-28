@@ -16,7 +16,7 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMixin {
-  static const Duration _splashDuration = Duration(seconds: 5);
+  static const Duration _splashDuration = Duration(seconds: 2);
 
   late final AnimationController _controller;
   late final Animation<double> _fade;
@@ -55,7 +55,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
 
     if (isAdminSession) {
       // Just enough time for the entrance animation to feel intentional,
-      // not the full 5s public splash — an admin bouncing back from a
+      // not the full 2s public splash — an admin bouncing back from a
       // reload should land back on their dashboard almost immediately.
       await Future.delayed(const Duration(milliseconds: 900));
       if (!mounted) return;
