@@ -73,7 +73,7 @@ class NafasDrawer extends StatelessWidget {
                     padding: const EdgeInsets.all(1.5),
                     child: ClipOval(
                       child: Image.asset(
-                        'assets/images/logo.jpg',
+                        'assets/images/logo.png',
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => const Icon(Icons.eco, color: AppColors.wheatGold, size: 18),
                       ),

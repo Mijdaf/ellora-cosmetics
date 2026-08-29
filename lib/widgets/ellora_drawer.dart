@@ -77,7 +77,7 @@ class ElloraDrawer extends StatelessWidget {
                     padding: const EdgeInsets.all(1.5),
                     child: ClipOval(
                       child: Image.asset(
-                        'assets/images/logo.jpg',
+                        'assets/images/logo.png',
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => const Icon(Icons.spa, color: AppColors.wheatGold, size: 18),
                       ),

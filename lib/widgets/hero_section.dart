@@ -149,7 +149,7 @@ class _HeroSectionState extends State<HeroSection> with TickerProviderStateMixin
       flex: isNarrow ? 0 : 5,
       child: Padding(
         padding: EdgeInsets.only(top: isNarrow ? 0 : 0, bottom: isNarrow ? 30 : 0),
-        child: const Center(child: BrandLogo3D(size: 220)),
+        child: const Center(child: BrandLogo3D(size: 320)),
       ),
     );
 

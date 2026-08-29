@@ -64,89 +64,113 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
   Widget _buildBar(BuildContext context, bool isNarrow, double t, bool isArabic) {
     if (isNarrow) return _buildMobileBar(context, t, isArabic);
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 14, 24, 0),
-      child: SafeArea(
-        bottom: false,
-        child: Center(
-          child: IntrinsicWidth(
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeOut,
-              height: 68,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(34),
-                border: Border.all(
-                  color: AppColors.wheatGold.withOpacity(0.14 + 0.1 * t),
-                  width: 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.18 + 0.12 * t),
-                    blurRadius: 28,
-                    offset: const Offset(0, 10),
+    return ValueListenableBuilder<bool>(
+      valueListenable: AppMood.isDark,
+      builder: (context, isDark, _) {
+        // Same flip the mobile bar and the rest of the page already do:
+        // cream text/icons on the dark pill, deep espresso on the light
+        // one — previously this branch never looked at AppMood at all, so
+        // the desktop pill stayed dark even when the whole page switched
+        // to light mood.
+        final fgColor = isDark ? AppColors.cream : AppColors.espressoDeep;
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(24, 14, 24, 0),
+          child: SafeArea(
+            bottom: false,
+            child: Center(
+              child: IntrinsicWidth(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeOut,
+                  height: 68,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(34),
+                    border: Border.all(
+                      color: AppColors.wheatGold.withOpacity(0.14 + 0.1 * t),
+                      width: 1,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: (isDark ? Colors.black : AppColors.espressoDeep).withOpacity(isDark ? 0.18 + 0.12 * t : 0.10 + 0.08 * t),
+                        blurRadius: 28,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(34),
-                child: Container(
-                  // Was 0.55 → 0.94 → 0.88/0.97. This pill used to sit
-                  // behind a BackdropFilter blur, but that blur re-samples
-                  // and re-blurs everything scrolling underneath it on
-                  // every single frame — and since this pill is pinned on
-                  // screen for the whole page, that cost was paid
-                  // continuously while scrolling (a classic Flutter jank
-                  // source). At this opacity the blur was already a near
-                  // no-op visually (see the old comment this replaced), so
-                  // dropping it keeps the pill just as legible while
-                  // removing that per-frame cost entirely.
-                  color: Color.lerp(
-                    AppColors.espressoDeep.withOpacity(0.88),
-                    AppColors.espressoDeep.withOpacity(0.97),
-                    t,
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.center,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        _SecretAdminTap(child: const _OrbitingLogoBadge()),
-                        const SizedBox(width: 10),
-                        Text('Ellora', style: AppTheme.brandWordmark(isArabic: isArabic).copyWith(fontSize: 22, fontWeight: FontWeight.w700)),
-                        const SizedBox(width: 14),
-                        _MagneticNavLinks(onTap: onNavLinkTap, isArabic: isArabic, activeIndex: activeNavIndex),
-                        const SizedBox(width: 12),
-                        const _MoodToggleButton(),
-                        const SizedBox(width: 8),
-                        const _LanguageToggleButton(),
-                        const SizedBox(width: 8),
-                        _CartButton(
-                          count: cartCount,
-                          items: cartItems,
-                          onBrowseMenu: onCartBrowseMenu,
-                          onViewCart: onViewCart,
-                          isArabic: isArabic,
-                          // Same RTL mirroring as the mobile bar: this is the
-                          // last item in the Row, so under Arabic it lands on
-                          // the capsule's left edge instead of the right —
-                          // flip the hang direction so the panel still opens
-                          // toward the middle of the screen instead of off
-                          // its edge.
-                          alignLeft: isArabic,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(34),
+                    child: Container(
+                      // Was 0.55 → 0.94 → 0.88/0.97. This pill used to sit
+                      // behind a BackdropFilter blur, but that blur re-samples
+                      // and re-blurs everything scrolling underneath it on
+                      // every single frame — and since this pill is pinned on
+                      // screen for the whole page, that cost was paid
+                      // continuously while scrolling (a classic Flutter jank
+                      // source). At this opacity the blur was already a near
+                      // no-op visually (see the old comment this replaced), so
+                      // dropping it keeps the pill just as legible while
+                      // removing that per-frame cost entirely.
+                      //
+                      // In light mood the pill flips to a warm cream backing
+                      // instead of espresso, so it doesn't sit as a dark
+                      // patch over the light page.
+                      color: isDark
+                          ? Color.lerp(
+                              AppColors.espressoDeep.withOpacity(0.88),
+                              AppColors.espressoDeep.withOpacity(0.97),
+                              t,
+                            )
+                          : Color.lerp(
+                              AppColors.cream.withOpacity(0.85),
+                              AppColors.cream.withOpacity(0.97),
+                              t,
+                            ),
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.center,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            _SecretAdminTap(child: const _OrbitingLogoBadge()),
+                            const SizedBox(width: 10),
+                            Text('Ellora',
+                                style: AppTheme.brandWordmark(isArabic: isArabic)
+                                    .copyWith(fontSize: 22, fontWeight: FontWeight.w700, color: fgColor)),
+                            const SizedBox(width: 14),
+                            _MagneticNavLinks(onTap: onNavLinkTap, isArabic: isArabic, activeIndex: activeNavIndex, isDark: isDark),
+                            const SizedBox(width: 12),
+                            const _MoodToggleButton(),
+                            const SizedBox(width: 8),
+                            const _LanguageToggleButton(),
+                            const SizedBox(width: 8),
+                            _CartButton(
+                              count: cartCount,
+                              items: cartItems,
+                              onBrowseMenu: onCartBrowseMenu,
+                              onViewCart: onViewCart,
+                              isArabic: isArabic,
+                              iconColor: fgColor,
+                              // Same RTL mirroring as the mobile bar: this is the
+                              // last item in the Row, so under Arabic it lands on
+                              // the capsule's left edge instead of the right —
+                              // flip the hang direction so the panel still opens
+                              // toward the middle of the screen instead of off
+                              // its edge.
+                              alignLeft: isArabic,
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -184,15 +208,13 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
                       color: AppColors.wheatGold.withOpacity(0.14 + 0.1 * t),
                       width: 1,
                     ),
-                    boxShadow: isDark
-                        ? [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.18 + 0.12 * t),
-                              blurRadius: 24,
-                              offset: const Offset(0, 8),
-                            ),
-                          ]
-                        : const [],
+                    boxShadow: [
+                      BoxShadow(
+                        color: (isDark ? Colors.black : AppColors.espressoDeep).withOpacity(isDark ? 0.18 + 0.12 * t : 0.10 + 0.08 * t),
+                        blurRadius: 24,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(30),
@@ -204,15 +226,20 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
                       // color below is already 88-97% opaque, so a blur adds very
                       // little visually while costing a lot on scroll.
                       //
-                      // In light mood the bar goes fully transparent instead —
-                      // just the border/shape stay, no solid backing at all.
+                      // In light mood the pill flips to a warm cream backing
+                      // instead of going fully transparent, matching the
+                      // desktop pill instead of leaving the mobile bar see-through.
                       color: isDark
                           ? Color.lerp(
                               AppColors.espressoDeep.withOpacity(0.88),
                               AppColors.espressoDeep.withOpacity(0.97),
                               t,
                             )
-                          : Colors.transparent,
+                          : Color.lerp(
+                              AppColors.cream.withOpacity(0.85),
+                              AppColors.cream.withOpacity(0.97),
+                              t,
+                            ),
                       padding: const EdgeInsets.symmetric(horizontal: 14),
                       // Wrapped in FittedBox (same as the desktop bar above) so
                       // the whole row scales down to fit narrow phone widths
@@ -243,25 +270,6 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
                             ),
                             const SizedBox(width: 8),
                             _SecretAdminTap(child: _MobileAvatar(ringColor: fgColor)),
-                            const SizedBox(width: 10),
-                            _CartButton(
-                              count: cartCount,
-                              items: cartItems,
-                              onBrowseMenu: onCartBrowseMenu,
-                              onViewCart: onViewCart,
-                              isArabic: isArabic,
-                              iconColor: fgColor,
-                              // Cart is now the trailing widget, so it lands on the
-                              // inner/center-ish edge instead of the outer one —
-                              // last in the Row means it appears on the right in
-                              // English (LTR) and the left in Arabic (RTL, which
-                              // mirrors the Row). Hang the dropdown the opposite
-                              // way so it always opens back toward the middle of
-                              // the screen instead of off the edge — same formula
-                              // as the desktop bar's cart button above, which is
-                              // last in its Row too.
-                              alignLeft: isArabic,
-                            ),
                           ],
                         ),
                       ),
@@ -338,7 +346,7 @@ class _MobileAvatar extends StatelessWidget {
       padding: const EdgeInsets.all(1.5),
       child: ClipOval(
         child: Image.asset(
-          'assets/images/logo.jpg',
+          'assets/images/logo.png',
           fit: BoxFit.cover,
           errorBuilder: (_, __, ___) => Icon(Icons.spa, color: ringColor, size: 16),
         ),
@@ -428,7 +436,7 @@ class _OrbitingLogoBadgeState extends State<_OrbitingLogoBadge> with SingleTicke
         padding: const EdgeInsets.all(1.5),
         child: ClipOval(
           child: Image.asset(
-            'assets/images/logo.jpg',
+            'assets/images/logo.png',
             fit: BoxFit.cover,
             errorBuilder: (_, __, ___) => const Icon(Icons.spa, color: AppColors.wheatGold, size: 18),
           ),
@@ -445,7 +453,8 @@ class _MagneticNavLinks extends StatefulWidget {
   final List<VoidCallback>? onTap;
   final bool isArabic;
   final int activeIndex;
-  const _MagneticNavLinks({this.onTap, required this.isArabic, this.activeIndex = -1});
+  final bool isDark;
+  const _MagneticNavLinks({this.onTap, required this.isArabic, this.activeIndex = -1, this.isDark = true});
 
   @override
   State<_MagneticNavLinks> createState() => _MagneticNavLinksState();
@@ -462,6 +471,9 @@ class _MagneticNavLinksState extends State<_MagneticNavLinks> {
 
   @override
   Widget build(BuildContext context) {
+    final inactiveColor = widget.isDark ? AppColors.cream.withOpacity(0.7) : AppColors.espressoDeep.withOpacity(0.65);
+    final inactiveTextColor = widget.isDark ? AppColors.cream.withOpacity(0.85) : AppColors.espressoDeep.withOpacity(0.8);
+    final activeColor = widget.isDark ? AppColors.wheatGoldLight : AppColors.wheatGoldDark;
     final labels = [
       S.t('nav_menu', widget.isArabic),
       S.t('nav_accessories', widget.isArabic),
@@ -494,7 +506,7 @@ class _MagneticNavLinksState extends State<_MagneticNavLinks> {
                         child: Icon(
                           isActive ? _iconsActive[i] : _icons[i],
                           key: ValueKey(isActive),
-                          color: isActive ? AppColors.wheatGoldLight : AppColors.cream.withOpacity(0.7),
+                          color: isActive ? activeColor : inactiveColor,
                           size: isActive ? 20 : 17,
                         ),
                       ),
@@ -502,11 +514,11 @@ class _MagneticNavLinksState extends State<_MagneticNavLinks> {
                       AnimatedDefaultTextStyle(
                         duration: const Duration(milliseconds: 150),
                         style: TextStyle(fontFamily: AppTheme.fontFor(widget.isArabic), 
-                          color: isActive ? AppColors.wheatGoldLight : AppColors.cream.withOpacity(0.85),
+                          color: isActive ? activeColor : inactiveTextColor,
                           fontWeight: FontWeight.w700,
                           fontSize: isActive ? 19 : 17,
                           decoration: isActive ? TextDecoration.underline : TextDecoration.none,
-                          decorationColor: AppColors.wheatGoldLight,
+                          decorationColor: activeColor,
                           decorationThickness: 2,
                         ),
                         child: Text(labels[i]),
@@ -799,36 +811,42 @@ class _LanguageToggleButton extends StatelessWidget {
     return ValueListenableBuilder<bool>(
       valueListenable: AppLanguage.isArabic,
       builder: (context, isArabic, _) {
-        return SizedBox(
-          width: 34,
-          height: 34,
-          child: Material(
-            color: Colors.transparent,
-            shape: CircleBorder(
-              side: BorderSide(color: AppColors.wheatGold.withOpacity(0.45)),
-            ),
-            child: InkWell(
-              customBorder: const CircleBorder(),
-              onTap: AppLanguage.toggle,
-              child: Center(
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 200),
-                  transitionBuilder: (child, anim) => FadeTransition(opacity: anim, child: child),
-                  child: Text(
-                    isArabic ? 'EN' : 'AR',
-                    key: ValueKey(isArabic),
-                    style: const TextStyle(
-                      fontFamily: 'Montserrat',
-                      color: AppColors.wheatGoldLight,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 12,
-                      letterSpacing: 0.3,
+        return ValueListenableBuilder<bool>(
+          valueListenable: AppMood.isDark,
+          builder: (context, isDark, _) {
+            final labelColor = isDark ? AppColors.wheatGoldLight : AppColors.wheatGoldDark;
+            return SizedBox(
+              width: 34,
+              height: 34,
+              child: Material(
+                color: Colors.transparent,
+                shape: CircleBorder(
+                  side: BorderSide(color: AppColors.wheatGold.withOpacity(0.45)),
+                ),
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: AppLanguage.toggle,
+                  child: Center(
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 200),
+                      transitionBuilder: (child, anim) => FadeTransition(opacity: anim, child: child),
+                      child: Text(
+                        isArabic ? 'EN' : 'AR',
+                        key: ValueKey(isArabic),
+                        style: TextStyle(
+                          fontFamily: 'Montserrat',
+                          color: labelColor,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ),
+            );
+          },
         );
       },
     );

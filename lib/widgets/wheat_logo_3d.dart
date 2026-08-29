@@ -2,7 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
-/// Displays your real uploaded logo (assets/images/logo.jpg), floating and
+/// Displays your real uploaded logo (assets/images/logo.png), floating and
 /// tilting in 3D space via a perspective transform matrix — reacts to both
 /// an idle auto-sway and the cursor position.
 class WheatLogo3D extends StatefulWidget {
@@ -91,7 +91,7 @@ class _LogoImage extends StatelessWidget {
       ),
       child: ClipOval(
         child: Image.asset(
-          'assets/images/logo.jpg',
+          'assets/images/logo.png',
           fit: BoxFit.cover,
           errorBuilder: (_, __, ___) => Container(
             color: AppColors.espressoDeep,
