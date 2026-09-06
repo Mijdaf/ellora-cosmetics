@@ -84,7 +84,7 @@ class AppColors {
 /// actually listens, not the whole app.
 class AppMood {
   AppMood._();
-  static final ValueNotifier<bool> isDark = ValueNotifier<bool>(true);
+  static final ValueNotifier<bool> isDark = ValueNotifier<bool>(false);
   static void toggle() => isDark.value = !isDark.value;
 }
 

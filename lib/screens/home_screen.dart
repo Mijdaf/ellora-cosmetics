@@ -49,6 +49,12 @@ class _HomeScreenState extends State<HomeScreen> {
   // ValueListenableBuilder around NavBar/ElloraDrawer (below) rebuild on
   // scroll, with zero change to what either widget actually renders.
   final ValueNotifier<double> _scrollProgress = ValueNotifier(0);
+  // Raw scroll offset (not clamped 0-1 like _scrollProgress above), fed to
+  // the Hero's logo so it can drift/fade as the page scrolls past it — a
+  // classic "parallax" depth cue. Kept as its own notifier so only the
+  // small ValueListenableBuilder around the logo rebuilds on every scroll
+  // tick, not the rest of the hero or the page.
+  final ValueNotifier<double> _heroParallax = ValueNotifier(0);
   // -1 = neither section in view (e.g. still on the hero); 0 = Menu, 1 =
   // About — drives the nav bar's real "active" link, not just hover.
   final ValueNotifier<int> _activeNavIndex = ValueNotifier(-1);
@@ -137,6 +143,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _scrollController.addListener(() {
       final p = (_scrollController.offset / 140).clamp(0.0, 1.0);
       if (p != _scrollProgress.value) _scrollProgress.value = p;
+      _heroParallax.value = _scrollController.offset;
       _updateActiveNavSection();
     });
   }
@@ -145,6 +152,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _scrollController.dispose();
     _scrollProgress.dispose();
+    _heroParallax.dispose();
     _activeNavIndex.dispose();
     super.dispose();
   }
@@ -377,7 +385,12 @@ class _HomeScreenState extends State<HomeScreen> {
                           end: Alignment.bottomCenter,
                         ),
                       ),
-                      child: HeroSection(onExplore: _scrollToMenu, isDark: isDark, isArabic: isArabic),
+                      child: HeroSection(
+                        onExplore: _scrollToMenu,
+                        isDark: isDark,
+                        isArabic: isArabic,
+                        parallax: _heroParallax,
+                      ),
                     ),
                     const _PromoBanners(),
                       _CategoryMarquee(
@@ -1333,6 +1346,17 @@ class _FooterState extends State<_Footer> with TickerProviderStateMixin {
                                     ),
                               const SizedBox(height: 10),
                               Text(S.t('baked_with_love', isArabic), style: AppTheme.eyebrow(isArabic: isArabic)),
+                              const SizedBox(height: 4),
+                              Text(
+                                S.t('made_with_care', isArabic),
+                                style: TextStyle(
+                                  fontFamily: AppTheme.fontFor(isArabic),
+                                  fontWeight: FontWeight.w700,
+                                  color: isDark ? AppColors.cream : AppColors.espressoDeep,
+                                  fontSize: 15,
+                                  letterSpacing: isArabic ? 0 : 1,
+                                ),
+                              ),
                               const SizedBox(height: 14),
                               SizedBox(
                                 width: isNarrow ? double.infinity : 260,
@@ -1409,7 +1433,7 @@ class _FooterState extends State<_Footer> with TickerProviderStateMixin {
                         ],
                       ),
                       if (isNarrow) const SizedBox(height: 14),
-                      Text(S.t('made_with_care', isArabic),
+                      Text(S.t('with_love', isArabic),
                           style: TextStyle(
                             fontFamily: AppTheme.fontFor(isArabic),
                             color: mutedText.withOpacity(_footerOpacity(isDark, 0.35)),

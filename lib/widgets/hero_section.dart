@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../services/app_language.dart';
 import '../theme/app_theme.dart';
@@ -11,7 +12,17 @@ class HeroSection extends StatefulWidget {
   final VoidCallback onExplore;
   final bool isDark;
   final bool isArabic;
-  const HeroSection({super.key, required this.onExplore, required this.isDark, required this.isArabic});
+  // Raw page scroll offset from the parent, used to drift/fade/scale the
+  // logo as the shopper scrolls past the hero — a lightweight parallax
+  // depth cue instead of the logo just scrolling off 1:1 with the page.
+  final ValueListenable<double> parallax;
+  const HeroSection({
+    super.key,
+    required this.onExplore,
+    required this.isDark,
+    required this.isArabic,
+    required this.parallax,
+  });
 
   @override
   State<HeroSection> createState() => _HeroSectionState();
@@ -149,7 +160,28 @@ class _HeroSectionState extends State<HeroSection> with TickerProviderStateMixin
       flex: isNarrow ? 0 : 5,
       child: Padding(
         padding: EdgeInsets.only(top: isNarrow ? 0 : 0, bottom: isNarrow ? 30 : 0),
-        child: const Center(child: BrandLogo3D(size: 320)),
+        child: Center(
+          child: ValueListenableBuilder<double>(
+            valueListenable: widget.parallax,
+            builder: (context, offset, child) {
+              // 0 at the top of the page, 1 once scrolled a bit past the
+              // hero — drives how far the logo has drifted/faded/shrunk.
+              final t = (offset / 280).clamp(0.0, 1.0);
+              return Opacity(
+                opacity: 1 - t * 0.6,
+                child: Transform.translate(
+                  // Logo rises slower than the page scrolls (classic
+                  // parallax — it feels like it's set back, behind the
+                  // content scrolling past it) and settles slightly
+                  // smaller, adding a touch of depth on scroll.
+                  offset: Offset(0, -t * 46),
+                  child: Transform.scale(scale: 1 - t * 0.1, child: child),
+                ),
+              );
+            },
+            child: const BrandLogo3D(size: 320),
+          ),
+        ),
       ),
     );
 

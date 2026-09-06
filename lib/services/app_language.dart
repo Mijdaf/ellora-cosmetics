@@ -69,6 +69,7 @@ class S {
 
     // Footer
     'with_love': 'MADE WITH LOVE',
+    'baked_with_love': 'BAKED WITH LOVE',
     'footer_tagline':
         'Makeup, skincare and fragrance — crafted with care, made for every kind of girl.',
     'quick_links': 'QUICK LINKS',
@@ -76,7 +77,7 @@ class S {
     'contact': 'Contact',
     'dashboard': 'Dashboard',
     'copyright': '© 2026 Ellora Cosmetics. All rights reserved.',
-    'made_with_care': 'Made with love, one girl at a time.',
+    'made_with_care': "I'M JUST A GIRL",
 
     // Cart screen
     'your_cart': 'Your Cart',
@@ -164,13 +165,14 @@ class S {
 
     // Footer
     'with_love': 'بحب',
+    'baked_with_love': 'صُنع بكل حب',
     'footer_tagline': 'مكياج وإكسسوارات — تُصنع بعناية، لكل بنت.',
     'quick_links': 'روابط سريعة',
     'about_us': 'من نحن',
     'contact': 'تواصل معنا',
     'dashboard': 'لوحة التحكم',
     'copyright': '© 2026 إيلورا كوزمتكس. جميع الحقوق محفوظة.',
-    'made_with_care': 'يُصنع بحب، لكل بنت.',
+    'made_with_care': 'أنا بس بنت',
 
     // Cart screen
     'your_cart': 'سلتك',
