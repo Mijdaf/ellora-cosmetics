@@ -1345,8 +1345,6 @@ class _FooterState extends State<_Footer> with TickerProviderStateMixin {
                                       ],
                                     ),
                               const SizedBox(height: 10),
-                              Text(S.t('baked_with_love', isArabic), style: AppTheme.eyebrow(isArabic: isArabic)),
-                              const SizedBox(height: 4),
                               Text(
                                 S.t('made_with_care', isArabic),
                                 style: TextStyle(
